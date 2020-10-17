@@ -1,2 +1,14 @@
 
 *.log
+*.bak
+*.dat
+*.dir
+*.spec
+*.pyc
+*.toc
+*.zip
+*.manifest
+*.txt
+*.pkg
+*.pyz
+*.html
