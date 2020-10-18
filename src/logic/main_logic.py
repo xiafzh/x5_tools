@@ -60,6 +60,19 @@ class CMainLogic:
            if self.config_proj_path[-1:] != "/":
                self.config_proj_path += "/"
         
+        option = "log_level"
+        if configer.has_option(section, option):
+            self.log_level = configer.get(section, option)
+        
+        section = "svn"
+        option = "username"
+        if configer.has_option(section, option):
+            self.svn_username = configer.get(section, option)
+        
+        option = "password"
+        if configer.has_option(section, option):
+            self.svn_password = configer.get(section, option)
+
         configer.clear()
 
         self.update_thread = CUpdateThreadLogic(self)

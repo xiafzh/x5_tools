@@ -42,9 +42,6 @@ class CUpdateThreadLogic:
         self.update_thread = {}
         self.is_running = False
 
-        self.svn_name = "zhangxiafei"
-        self.svn_pwd = "rni7ik"
-
         # 构造拓扑图
         conf_data = GetCommonXMLData("./config/common_config.xml", "CommonConfig/CreateTopos")
         self.init_topo_data(conf_data, self.EOT_Create);
@@ -89,8 +86,9 @@ class CUpdateThreadLogic:
                 exe_cmd = self.__GetExecuteCMD(topo.type, topo.cmd)
 
                 topo.state = STopoData.S_RUNNING
-                self.update_thread[topo.id] = CThreadCreateProj(topo.id, exe_cmd)
+                self.update_thread[topo.id] = CThreadCreateProj(topo.id, topo.desc, exe_cmd)
                 self.update_thread[topo.id].finishSin.connect(self.on_create_thread_finish)
+                self.update_thread[topo.id].logAddSin.connect(self.on_create_thread_running)
                 self.update_thread[topo.id].start()
 
 
@@ -113,17 +111,18 @@ class CUpdateThreadLogic:
         if len(self.update_thread) == 0:
             self.is_running = False
             print(self.is_running)
-            
-  
-        
+    
+    def on_create_thread_running(self, id, log):
+        self.lmgr.appendLog(id, log)
+       
     def __GetExecuteCMD(self, type, cmd):
         type_value = int(type)
         if type_value == self.ECT_P4Snc:
             return cmd % self.p4path
         elif type_value == self.ECT_SvnCOStar:
-            return cmd % (self.svn_name, self.svn_pwd, self.svnpath, self.projpath)
+            return cmd % (self.lmgr.svn_username, self.lmgr.svn_password, self.svnpath, self.projpath)
         elif type_value == self.ECT_SvnCOVideo:
-            return cmd % (self.svn_name, self.svn_pwd, self.videosvnpath, self.projpath)
+            return cmd % (self.lmgr.svn_username, self.lmgr.svn_password, self.videosvnpath, self.projpath)
         elif type_value == self.ECT_Compile:
             return cmd % self.projpath
         elif type_value == self.ECT_SvnUpdate:
@@ -137,12 +136,13 @@ class CThreadCreateProj(QThread):
     logAddSin = pyqtSignal(str, str)
     finishSin = pyqtSignal(str, int)
 
-    def __init__(self, id, cmd):
+    def __init__(self, id, desc, cmd):
         super(CThreadCreateProj, self).__init__()
         self.id = id
+        self.desc = desc
         self.cmd = cmd
-        #self.subproc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        #    , stdin=subprocess.PIPE, encoding="gb18030")
+        self.subproc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            , stdin=subprocess.PIPE, encoding="gb18030")
 
     def stopRun(self):
         print("del")
@@ -153,14 +153,11 @@ class CThreadCreateProj(QThread):
 
     def run(self):
         while (True):            
-            self.sleep(5)
-            #self.logAddSin.emit(self.id, self.subproc.stdout.read(128))
-            #res = self.subproc.poll()
-            #if res != None:
-            #    self.finishSin.emit(self.id, res)            
-            #    break
-            self.finishSin.emit(self.id, 0) 
-            break
+            self.logAddSin.emit(self.id, self.subproc.stdout.read(128))
+            res = self.subproc.poll()
+            if res != None:
+                self.finishSin.emit(self.desc, res)            
+                break
         
         print("run finish", self.id, self.cmd)
 
