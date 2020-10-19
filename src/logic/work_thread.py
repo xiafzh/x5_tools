@@ -1,6 +1,7 @@
 #encoding:utf-8
 
 import os
+import stat
 import subprocess
 from PyQt5.QtCore import QThread
 
@@ -17,23 +18,44 @@ class CWorkThread(QThread):
             self.sleep(1)
 
 class CThreadStartServer(QThread):
-    def __init__(self, pwd, mgr):
+    def __init__(self, pwd, mgr, ip):
         super(CThreadStartServer, self).__init__()
         self.pwd = pwd
         self.data_mgr = mgr
+        self.ip = ip
     
     def __del__(self):
         self.wait()
 
+    def change_macros_ip(self):
+        macros_file = self.pwd + "/config/macros.xml"
+        if not os.path.exists(macros_file):
+            return False
+        
+        os.chmod(macros_file, stat.S_IWRITE)
+
+        f_r = open(macros_file, "r")
+        all_str = f_r.read()
+        f_r.close()
+
+        all_str = all_str.replace("127.0.0.1", self.ip)
+        f_w = open(macros_file, "w")
+        f_w.write(all_str)
+        f_w.close()
+
     def run(self):
         try:
             self.data_mgr.ThreadSafeChangeDir(self.pwd)
-            # 通过admin_proxy获取
+
+            self.change_macros_ip()            
+
             subprocess.Popen('start app_box_d', shell=True, stdout = subprocess.PIPE
                 , stdin=subprocess.PIPE, stderr=subprocess.PIPE, encoding="gb18030")
             subprocess.Popen('start app_box_d -port 27153', shell=True, stdout = subprocess.PIPE
                 , stdin=subprocess.PIPE, stderr=subprocess.PIPE, encoding="gb18030")
             subprocess.Popen('start app_box_d -port 27154', shell=True, stdout = subprocess.PIPE
+                , stdin=subprocess.PIPE, stderr=subprocess.PIPE, encoding="gb18030")
+            subprocess.Popen('start app_box_d -port 27156', shell=True, stdout = subprocess.PIPE
                 , stdin=subprocess.PIPE, stderr=subprocess.PIPE, encoding="gb18030")
             self.data_mgr.ThreadSafeChangeDirOver()  
             #休眠5秒
@@ -43,7 +65,9 @@ class CThreadStartServer(QThread):
                 , stdin=subprocess.PIPE, stderr=subprocess.PIPE, encoding="gb18030")
             subprocess.Popen('start admin_client_new', shell=True, stdout = subprocess.PIPE
                 , stdin=subprocess.PIPE, stderr=subprocess.PIPE, encoding="gb18030")
-            self.data_mgr.ThreadSafeChangeDirOver()
         except Exception as err:
             self.data_mgr.logger.LogError("start server", err.__str__())
+        finally:
+            self.data_mgr.ThreadSafeChangeDirOver()
+        
 

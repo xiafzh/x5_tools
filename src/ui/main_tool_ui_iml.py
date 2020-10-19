@@ -37,11 +37,14 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
 
     def init_widget_data(self):
         # 屏蔽掉不可用功能按钮
-        #self.btnCompile.setEnabled(False)
+        self.btnCompile.setEnabled(False)
         self.cbProjects.setEnabled(False)
+        self.checkOnlyAdd.setChecked(True)
+        self.checkOnlyAdd.setEnabled(False)
+
 
         self.cbIP.setEditable(True)
-        self.checkOnlyAdd.setCheckState(False)
+        #self.checkOnlyAdd.setCheckState(False)
 
         # 分支
         for item in self.lmgr.getAllBranches():
@@ -163,7 +166,7 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
     
     def slot_click_start_server(self):
         print('启动服务器')
-        self.lmgr.startServer(self.cbBranches.currentText())
+        self.lmgr.startServer(self.cbBranches.currentText(), self.cbIP.currentText())
 
     def on_click_login(self):
         qq = self.text_qq.text()

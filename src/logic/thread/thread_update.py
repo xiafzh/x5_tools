@@ -3,6 +3,7 @@
 import os
 import subprocess
 import copy
+import time
 from PyQt5.QtCore import QThread,pyqtSignal
 import xml.dom.minidom
 from src.logic.tools.read_xml import *
@@ -86,14 +87,17 @@ class CUpdateThreadLogic:
                 exe_cmd = self.__GetExecuteCMD(topo.type, topo.cmd)
 
                 topo.state = STopoData.S_RUNNING
+                self.lmgr.ThreadSafeChangeDir(os.getcwd() + "/scripts")
                 self.update_thread[topo.id] = CThreadCreateProj(topo.id, topo.desc, exe_cmd)
+                self.lmgr.ThreadSafeChangeDirOver()
+                
                 self.update_thread[topo.id].finishSin.connect(self.on_create_thread_finish)
                 self.update_thread[topo.id].logAddSin.connect(self.on_create_thread_running)
                 self.update_thread[topo.id].start()
 
-
     def on_create_thread_finish(self, id, res):
         if id not in self.update_thread:
+            print("no ", id)
             return
         
         del self.update_thread[id]
@@ -141,24 +145,25 @@ class CThreadCreateProj(QThread):
         self.id = id
         self.desc = desc
         self.cmd = cmd
+        print("start running", self.id, self.cmd, os.getcwd())
         self.subproc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-            , stdin=subprocess.PIPE, encoding="gb18030")
+            , encoding="gb18030")
 
     def stopRun(self):
         print("del")
 
-    
-    def __del__(self):
-        self.wait()
-
     def run(self):
+        res = None
         while (True):            
-            self.logAddSin.emit(self.id, self.subproc.stdout.read(128))
             res = self.subproc.poll()
             if res != None:
-                self.finishSin.emit(self.desc, res)            
                 break
+            else:
+                read_buf = self.subproc.stdout.read(128)
+                self.logAddSin.emit(self.desc, read_buf)
+
         
-        print("run finish", self.id, self.cmd)
+        print("run finish", self.id, self.cmd, res)
+        self.finishSin.emit(self.id, res)
 
  

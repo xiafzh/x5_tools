@@ -5,6 +5,7 @@ import subprocess
 import shelve
 import re
 import time
+import stat
 from configparser import *
 from src.logic.main_data import *
 from conf.common import *
@@ -125,11 +126,11 @@ class CMainLogic:
             self.logger.LogError(work_logger, type(err), err.__str__())
             return err.__str__()
     
-    def startServer(self, branch):
+    def startServer(self, branch, ip):
         try:
             target_path = self._transBranchToPath(branch) + "/exe"
             
-            thread = CThreadStartServer(target_path + '/server', self)
+            thread = CThreadStartServer(target_path + '/server', self, ip)
             thread.start()
             thread.wait()
             self.logger.LogDebug(work_logger, "start server")
@@ -255,6 +256,7 @@ class CMainLogic:
 
     def appendLog(self, log_id, log_content):
         #print("UpdateCreateLog" + log_id)
+        return
         self.mutex.lock()
         #print("appendLog mutex lock")
         if log_id in self.work_logs:            
@@ -322,9 +324,16 @@ class CMainLogic:
 
     def start_ui_editor(self, branch):
         branch_item = self._find_branch_by_name(branch)
-        cmd = "start %s/exe/NewUIEditor/uieditor/界面编辑器.bat" % branch_item.projpath
-        subprocess.Popen(cmd, shell=True, stdout = subprocess.PIPE
+        self.ThreadSafeChangeDir("%s/exe/NewUIEditor/editor/" % branch_item.projpath)
+        try:
+            os.system(r"attrib -r ..\resources\editor\domain\layout\Layout_Config.local.xml")
+            cmd = "start /b editor.exe Layout"
+            subprocess.Popen(cmd, shell=True, stdout = subprocess.PIPE
                 , stdin=subprocess.PIPE, stderr=subprocess.PIPE, encoding="gb18030")
+        except Exception as e:
+            print(e)
+        finally:
+            self.ThreadSafeChangeDirOver()
 
     # 分支换路径
     def _transBranchToPath(self, branch):
@@ -351,9 +360,9 @@ class CMainLogic:
     # check登录目标IP
     def _checkTargetIp(self, ip, path):
         config_file = path + "/config/user.ini"
-        self.logger.WriteLogI(config_file)
+        client_config_file = path + "/config/client_config.ini"
         # 配置文件不存在
-        if not os.path.exists(config_file):
+        if not os.path.exists(config_file) or not os.path.exists(client_config_file):
             return False
         
         self.mutex.lock()
@@ -370,16 +379,14 @@ class CMainLogic:
             if ip == config_ip:
                 return True
             
+            # 取消只读
+            os.chmod(config_file, stat.S_IWRITE)
+            os.chmod(client_config_file, stat.S_IWRITE)
+
             configer.set(section, option, ip)     
             file_w = open(config_file, 'w', encoding='ansi')
             configer.write(file_w)
             file_w.close()
-            # debug
-
-            print(config_file+ time.strftime("%Y%m%d%H%M%S", time.localtime()))
-            file_debug = open(config_file+ time.strftime("%Y%m%d%H%M%S", time.localtime()), 'w')
-            configer.write(file_debug)
-            file_debug.close()
             return True
         except Exception as err:
             print(err)
