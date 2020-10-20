@@ -276,9 +276,10 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
             self.log_combobox.removeItem(self.log_combobox.findText(log_id))
         elif LogOpt_Switch == log_opt:
             self.log_combobox.setCurrentText(log_id)
-            self.log_editbox.clear()
             
-            self.log_editbox.append(log_content)
+            self.log_editbox.clear()
+            for item in self.lmgr.GetWorkLogsById(log_id):
+                self.log_editbox.append(item)
     
     def slot_change_branches(self, branch):
         self.lmgr.change_select_branches(branch)
