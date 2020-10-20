@@ -37,7 +37,7 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
 
     def init_widget_data(self):
         # 屏蔽掉不可用功能按钮
-        self.btnCompile.setEnabled(False)
+        #self.btnCompile.setEnabled(False)
         self.cbProjects.setEnabled(False)
         self.checkOnlyAdd.setChecked(True)
         self.checkOnlyAdd.setEnabled(False)
@@ -248,7 +248,7 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
                 return
         #TODO::刷新分支
     
-    def RefreshWorkLogs(self, log_opt, log_id, log_content = []):
+    def RefreshWorkLogs(self, log_opt, log_id, log_content = ""):
         #print("refresh log", log_opt, log_id, len(log_content))
         if LogOpt_Init == log_opt:
             self.log_combobox.clear()
@@ -261,13 +261,12 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
                 self.log_editbox.append(item)
         elif LogOpt_Add == log_opt:
             self.log_combobox.addItem(log_id)
-            
-            for item in log_content:
-                self.log_editbox.append(item)
+            self.log_combobox.setCurrentText(log_id)
+
+            self.log_editbox.append(log_content)
         elif LogOpt_Upt == log_opt:
             if log_id == self.log_combobox.currentText():
-                for item in log_content:
-                    self.log_editbox.append(item)
+                self.log_editbox.append(log_content)
         elif LogOpt_Del == log_opt:
             if log_id == self.log_combobox.currentText():
                 self.log_combobox.setCurrentText(work_logger)
@@ -278,8 +277,8 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
         elif LogOpt_Switch == log_opt:
             self.log_combobox.setCurrentText(log_id)
             self.log_editbox.clear()
-            for item in log_content:
-                self.log_editbox.append(item)  
+            
+            self.log_editbox.append(log_content)
     
     def slot_change_branches(self, branch):
         self.lmgr.change_select_branches(branch)

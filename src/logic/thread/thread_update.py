@@ -7,7 +7,9 @@ import time
 from PyQt5.QtCore import QThread,pyqtSignal
 import xml.dom.minidom
 from src.logic.tools.read_xml import *
-
+import clr
+clr.AddReference('x51_tools')
+from x51_tools import X51Compiler
 
 class STopoData:
     S_IDLE = 0
@@ -88,7 +90,7 @@ class CUpdateThreadLogic:
 
                 topo.state = STopoData.S_RUNNING
                 self.lmgr.ThreadSafeChangeDir(os.getcwd() + "/scripts")
-                self.update_thread[topo.id] = CThreadCreateProj(topo.id, topo.desc, exe_cmd)
+                self.update_thread[topo.id] = CThreadCreateProj(topo.id, topo.desc, topo.cmd, exe_cmd)
                 self.lmgr.ThreadSafeChangeDirOver()
                 
                 self.update_thread[topo.id].finishSin.connect(self.on_create_thread_finish)
@@ -122,15 +124,15 @@ class CUpdateThreadLogic:
     def __GetExecuteCMD(self, type, cmd):
         type_value = int(type)
         if type_value == self.ECT_P4Snc:
-            return cmd % self.p4path
+            return self.p4path
         elif type_value == self.ECT_SvnCOStar:
             return cmd % (self.lmgr.svn_username, self.lmgr.svn_password, self.svnpath, self.projpath)
         elif type_value == self.ECT_SvnCOVideo:
             return cmd % (self.lmgr.svn_username, self.lmgr.svn_password, self.videosvnpath, self.projpath)
         elif type_value == self.ECT_Compile:
-            return cmd % self.projpath
+            return self.projpath
         elif type_value == self.ECT_SvnUpdate:
-            return cmd % self.projpath
+            return self.projpath
         return cmd
 
 
@@ -140,28 +142,31 @@ class CThreadCreateProj(QThread):
     logAddSin = pyqtSignal(str, str)
     finishSin = pyqtSignal(str, int)
 
-    def __init__(self, id, desc, cmd):
+    def __init__(self, id, desc, bat, cmd):
         super(CThreadCreateProj, self).__init__()
         self.id = id
         self.desc = desc
         self.cmd = cmd
-        print("start running", self.id, self.cmd, os.getcwd())
-        self.subproc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-            , encoding="gb18030")
-
+        print("start running", self.id, bat, self.cmd, os.getcwd())
+        self.proc = X51Compiler()
+        proc_id = self.proc.ExecuteFile(bat, cmd, os.getcwd())
+        
     def stopRun(self):
         print("del")
 
     def run(self):
         res = None
         while (True):            
-            res = self.subproc.poll()
-            if res != None:
+            is_finish = self.proc.Finished()
+            
+            while True:
+                out_str = self.proc.GetOutputString()
+                if "" == out_str:
+                    break
+                self.logAddSin.emit(self.desc, out_str)
+            
+            if is_finish:
                 break
-            else:
-                read_buf = self.subproc.stdout.read(128)
-                self.logAddSin.emit(self.desc, read_buf)
-
         
         print("run finish", self.id, self.cmd, res)
         self.finishSin.emit(self.id, res)

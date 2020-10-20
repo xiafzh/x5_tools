@@ -23,6 +23,7 @@ class CMainLogic:
 
         self.mutex = QtCore.QMutex()
         self.dir_mutex = QtCore.QMutex()
+        self.log_mutex = QtCore.QMutex()
         self.logger = CLogger()
         self.logger.start()
 
@@ -256,40 +257,36 @@ class CMainLogic:
 
     def appendLog(self, log_id, log_content):
         #print("UpdateCreateLog" + log_id)
-        return
-        self.mutex.lock()
         #print("appendLog mutex lock")
         if log_id in self.work_logs:            
-            self.work_logs[log_id].extend(log_content)
+            self.work_logs[log_id].append(log_content)
             log_len = len(self.work_logs[log_id])
-            if log_len > 50:
-                self.work_logs[log_id] = self.work_logs[log_id][log_len-50:]
+            if log_len > 100:
+                self.work_logs[log_id] = self.work_logs[log_id][log_len-80:]
                 
             self.ui.RefreshWorkLogs(LogOpt_Upt, log_id, log_content)
             self.logger.LogInfo(log_id, log_content)
         else:
-            self.work_logs.update({log_id:log_content})
+            self.work_logs.update({log_id:[]})
+            self.work_logs[log_id].append(log_content)
             self.ui.RefreshWorkLogs(LogOpt_Add, log_id, log_content)
             self.logger.LogInfo(log_id, log_content, is_new = True)
-        self.mutex.unlock()
         #print("appendLog mutex unlock")
     
     def deleteLog(self, log_id):
         #print("DelteCreateLog" + log_id)
-        self.mutex.lock()        
         #print("deleteLog mutex lock")
         if log_id in self.work_logs:
             del self.work_logs[log_id]
         self.ui.RefreshWorkLogs(LogOpt_Del, log_id)
-        self.mutex.unlock()        
         #print("deleteLog mutex unlock")
     
     def switchLog(self, log_id):
-        self.mutex.lock()
         #print("switchLog mutex lock")
         if log_id in self.work_logs:
-            self.ui.RefreshWorkLogs(LogOpt_Switch, log_id, self.work_logs[log_id])
-        self.mutex.unlock()
+            self.ui.RefreshWorkLogs(LogOpt_Switch, log_id, ""
+            #self.work_logs[log_id]
+            )
         #print("switchLog mutex unlock")
 
     def GetAllWorkLogs(self):

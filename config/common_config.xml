@@ -30,30 +30,30 @@
         </TopoItem>
     </CreateTopos>
     <UpdateTopos>
-        <TopoItem id="1" type="2" cmd = 'BuildConsole.exe %s/src/video/build_video_client.sln /build /ALL /cfg="Debug|Win32"' desc="Compile Video Client">
+        <TopoItem id="1" type="2" cmd="common_ib_video_client.bat" desc="Compile Video Client">
         </TopoItem>
-        <TopoItem id="2" type="2" cmd = 'BuildConsole.exe %s/src/star/build_client.sln /build /ALL /cfg="Debug|Win32"' desc="Compile Star Client">
+        <TopoItem id="2" type="2" cmd="common_ib_star_client.bat" desc="Compile Star Client">
             <NextItem id="1" />
         </TopoItem>        
-        <TopoItem id="3" type="2" cmd = 'BuildConsole.exe %s/src/star/build_server.sln /build /ALL /cfg="service_debug|Win32"' desc="Compile Star Server">
+        <TopoItem id="3" type="2" cmd="common_ib_star_server.bat" desc="Compile Star Server">
             <NextItem id="2" />
         </TopoItem>
-        <TopoItem id="4" type="4" cmd = "svn up %s/src/video/" desc="Svn Update Video">
+        <TopoItem id="4" type="4" cmd="update_svn_video.bat" desc="Svn Update Video">
             <NextItem id="1" />
         </TopoItem>        
-        <TopoItem id="5" type="4" cmd = "svn up %s/src/star/" desc="Svn Update Star">
+        <TopoItem id="5" type="4" cmd="update_svn_star.bat" desc="Svn Update Star">
             <NextItem id="3" />
         </TopoItem>        
-        <TopoItem id="6" type="0" cmd = "p4_update_resources.bat %s" desc="P4 Update Resources">
+        <TopoItem id="6" type="0" cmd="update_p4_resources.bat"  desc="P4 Update Resources">
         </TopoItem>        
-        <TopoItem id="7" type="0" cmd = "p4_update_data.bat %s" desc="P4 Update Data">
+        <TopoItem id="7" type="0" cmd="update_p4_data.bat"  desc="P4 Update Data">
             <NextItem id="6" />
         </TopoItem>
-        <TopoItem id="8" type="0" cmd = "p4_update_client.bat %s" desc="P4 Update DebugBin">
+        <TopoItem id="8" type="0" cmd="update_p4_client.bat" desc="P4 Update DebugBin">
                <NextItem id="7" />
             <NextItem id="2" />
         </TopoItem>        
-        <TopoItem id="9" type="0" cmd = "p4_update_server.bat %s" desc="P4 Update Server">
+        <TopoItem id="9" type="0" cmd="update_p4_server.bat"  desc="P4 Update Server">
             <NextItem id="8" />
             <NextItem id="3" />
         </TopoItem>
