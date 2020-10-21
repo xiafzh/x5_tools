@@ -14,6 +14,8 @@ from src.logger.logger import *
 from src.logic.work_thread import *
 from src.logic.thread.thread_create_proj import *
 from src.logic.thread.thread_update import *
+from x51_tools import X51Compiler
+
 
 # 不耗时的逻辑处理、数据缓存
 class CMainLogic:
@@ -187,7 +189,7 @@ class CMainLogic:
         return True, title
     
     def UpdateProjPath(self, p4path):
-        #self.logger.WriteLogI(p4path)
+        p4path = p4path.rstrip("/").rstrip("\\")
         (year, title) = self._transP4PathToBranchParam(p4path)
         branch_item = SBranchItem(title, "", p4path, "", '')
         if title == trunc_name:
@@ -201,6 +203,7 @@ class CMainLogic:
         self.all_braches.append(branch_item)
         self.saveShelveData('branch', self.all_braches)
         
+        self.appendLog(work_logger, "append_branch %s %s" % (title, branch_item.projpath))
         return True, title
 
     def RemoveProjPath(self, branch):
@@ -216,7 +219,7 @@ class CMainLogic:
         print(p4path, is_auto, proj_path, res_path) 
         if '' == p4path:
             return False
-
+        p4path = p4path.rstrip("\\").rstrip("/")
         svn_path, video_svn_path = self._transP4PathToSvnPath(p4path)
 
         if not is_auto:
@@ -331,6 +334,22 @@ class CMainLogic:
             print(e)
         finally:
             self.ThreadSafeChangeDirOver()
+
+    def cancel_readonly(self, branch):
+        branch_item = self._find_branch_by_name(branch)
+        if None == branch_item:
+            return False
+        try:
+            print("begin cancel", branch_item.projpath)
+            os.system(r"attrib -r %s/exe/bin/* /S /D" % branch_item.projpath)
+            os.system(r"attrib -r %s/exe/debug_bin/* /S /D" % branch_item.projpath)
+            os.system(r"attrib -r %s/exe/server/* /S /D" % branch_item.projpath)
+            os.system(r"attrib -r %s/exe/VideoAdminClient/* /S /D" % branch_item.projpath)
+            print("end cancel", branch_item.projpath)
+        except Exception as e:
+            print(e)
+        finally:
+            return True
 
     # 分支换路径
     def _transBranchToPath(self, branch):

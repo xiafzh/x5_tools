@@ -572,8 +572,8 @@
     <widget class="QPushButton" name="BtnConsoleReplace">
      <property name="geometry">
       <rect>
-       <x>180</x>
-       <y>290</y>
+       <x>80</x>
+       <y>320</y>
        <width>101</width>
        <height>23</height>
       </rect>
@@ -585,8 +585,8 @@
     <widget class="QPushButton" name="btnUIEditor">
      <property name="geometry">
       <rect>
-       <x>670</x>
-       <y>190</y>
+       <x>640</x>
+       <y>200</y>
        <width>75</width>
        <height>23</height>
       </rect>
@@ -632,6 +632,19 @@
      </property>
      <property name="text">
       <string>项目代码</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="btnCancelReadonly">
+     <property name="geometry">
+      <rect>
+       <x>170</x>
+       <y>290</y>
+       <width>75</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>取消只读</string>
      </property>
     </widget>
    </widget>

@@ -39,8 +39,8 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
         # 屏蔽掉不可用功能按钮
         #self.btnCompile.setEnabled(False)
         self.cbProjects.setEnabled(False)
-        self.checkOnlyAdd.setChecked(True)
-        self.checkOnlyAdd.setEnabled(False)
+        #self.checkOnlyAdd.setChecked(True)
+        #self.checkOnlyAdd.setEnabled(False)
 
 
         self.cbIP.setEditable(True)
@@ -140,6 +140,7 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
 
         self.BtnConsoleReplace.clicked.connect(self.slot_click_console_replacer)
         self.btnUIEditor.clicked.connect(self.slot_click_ui_editor)
+        self.btnCancelReadonly.clicked.connect(self.slot_click_cancel_readonly)
 
     def slot_click_vs_star_client(self):
         self.lmgr.start_vs("star", "build_client.sln", self.cbBranches.currentText())
@@ -285,7 +286,8 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
         self.lmgr.change_select_branches(branch)
     
     def slot_click_choose_dir(self, el):
-        choose_dir = QFileDialog.getExistingDirectory(self, "选择文件夹", os.getcwd())
+        print(el)
+        choose_dir = QFileDialog.getExistingDirectory(None, "选择文件夹", os.getcwd())
         if "" == choose_dir:
             return 
 
@@ -303,6 +305,9 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
             self.lmgr.start_ui_editor(trunc_name)
         else:
             self.lmgr.start_ui_editor(self.cbBranches.currentText())
-        
+
+    def slot_click_cancel_readonly(self):
+        self.lmgr.cancel_readonly(self.cbBranches.currentText())
+
     def define_qq_btn(self):
         print("未完成")

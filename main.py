@@ -7,6 +7,9 @@ cur_path = os.path.abspath(__file__)
 base_path = os.path.dirname(os.path.dirname(cur_path))
 sys.path.insert(0, base_path)
 
+import clr
+clr.AddReference('x51_tools')
+
 from src.run import *
 
 if __name__ == "__main__":

@@ -7,9 +7,8 @@ import time
 from PyQt5.QtCore import QThread,pyqtSignal
 import xml.dom.minidom
 from src.logic.tools.read_xml import *
-import clr
-clr.AddReference('x51_tools')
 from x51_tools import X51Compiler
+from conf.common import *
 
 class STopoData:
     S_IDLE = 0
@@ -96,6 +95,7 @@ class CUpdateThreadLogic:
                 self.update_thread[topo.id].finishSin.connect(self.on_create_thread_finish)
                 self.update_thread[topo.id].logAddSin.connect(self.on_create_thread_running)
                 self.update_thread[topo.id].start()
+                self.lmgr.appendLog(work_logger, "begin %s %s %s" % (topo.desc, topo.cmd, exe_cmd))
 
     def on_create_thread_finish(self, id, res):
         if id not in self.update_thread:
@@ -126,9 +126,9 @@ class CUpdateThreadLogic:
         if type_value == self.ECT_P4Snc:
             return self.p4path
         elif type_value == self.ECT_SvnCOStar:
-            return cmd % (self.lmgr.svn_username, self.lmgr.svn_password, self.svnpath, self.projpath)
+            return "%s %s %s %s" % (self.projpath, self.lmgr.svn_username, self.lmgr.svn_password, self.svnpath)
         elif type_value == self.ECT_SvnCOVideo:
-            return cmd % (self.lmgr.svn_username, self.lmgr.svn_password, self.videosvnpath, self.projpath)
+            return "%s %s %s %s" % (self.projpath, self.lmgr.svn_username, self.lmgr.svn_password, self.videosvnpath)
         elif type_value == self.ECT_Compile:
             return self.projpath
         elif type_value == self.ECT_SvnUpdate:
