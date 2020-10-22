@@ -165,49 +165,38 @@ class CMainLogic:
         return self.all_qqs
     
     
-    def UpdateProjPath(self, p4path, projpath, respath):
+    def UpdateProjPath(self, p4path, projpath = ""):
+        p4path = p4path.rstrip("/").rstrip("\\")
         (year, title) = self._transP4PathToBranchParam(p4path)
+        print(year, title, p4path)
+        if "" == projpath:
+            projpath = self.config_proj_path + p4path[28:]
 
         for item in self.all_braches:
             if item.title == title:
+                item.p4path = p4path
                 item.path = projpath
                 self.saveShelveData('branch', self.all_braches)
                 return False, ""
 
-        branch_item = SBranchItem(p4path, projpath, p4path, '', '')
-        (year, title) = self._transP4PathToBranchParam(p4path)
+        branch_item = SBranchItem(title, projpath, p4path, '', '')
+        '''       
         if title == trunc_name:
             branch_item.svnpath = star_svn_path % trunc_name
             branch_item.video_svn_path = star_svn_path % video_trunc_name
         else:
             branch_item.svnpath = star_svn_path % branch_svn_subfix % (year, title)
             branch_item.video_svn_path = star_svn_path % video_branch_svn_subfix % (year, title)
-
+        '''
         self.all_braches.append(branch_item)
         self.saveShelveData('branch', self.all_braches)
 
-        return True, title
-    
-    def UpdateProjPath(self, p4path):
-        p4path = p4path.rstrip("/").rstrip("\\")
-        (year, title) = self._transP4PathToBranchParam(p4path)
-        branch_item = SBranchItem(title, "", p4path, "", '')
-        if title == trunc_name:
-            branch_item.svnpath = star_svn_path % trunc_name
-            branch_item.video_svn_path = star_svn_path % video_trunc_name
-        else:
-            branch_item.svnpath = star_svn_path % branch_svn_subfix % (year, title)
-            branch_item.video_svn_path = star_svn_path % video_branch_svn_subfix % (year, title)
-
-        branch_item.projpath = self.config_proj_path + p4path[28:]
-        self.all_braches.append(branch_item)
-        self.saveShelveData('branch', self.all_braches)
-        
         self.appendLog(work_logger, "append_branch %s %s" % (title, branch_item.projpath))
         return True, title
-
+    
     def RemoveProjPath(self, branch):
         for index in range(0, len(self.all_braches)):
+            print(self.all_braches[index].title)
             if self.all_braches[index].title == branch:
                 self.all_braches.remove(self.all_braches[index])
                 self.saveShelveData('branch', self.all_braches)
@@ -215,19 +204,18 @@ class CMainLogic:
 
         return False, -1
 
-    def CreateNewProj(self, p4path, is_auto, proj_path = "", res_path = ""):
-        print(p4path, is_auto, proj_path, res_path) 
+    def CreateNewProj(self, p4path, proj_path = "", res_path = "", star_svn = "", video_svn = ""):
+        print(p4path, proj_path, res_path, star_svn, video_svn) 
         if '' == p4path:
             return False
         p4path = p4path.rstrip("\\").rstrip("/")
-        svn_path, video_svn_path = self._transP4PathToSvnPath(p4path)
+        proj_path = proj_path.rstrip("\\").rstrip("/")
+        res_path = res_path.rstrip("\\").rstrip("/")
 
-        if not is_auto:
-            if proj_path == "" or res_path == "" :
-                return False
-            proj_path = proj_path.rstrip("\\").rstrip("/")
-            res_path = res_path.rstrip("\\").rstrip("/")
+        if "" == proj_path:            
+            proj_path = self.config_proj_path + p4path[28:]
 
+        if "" != res_path:           
             # 判断路径是否存在
             if not os.path.exists(proj_path):
                 os.makedirs(proj_path)
@@ -237,11 +225,15 @@ class CMainLogic:
 
             #创建软链接
             os.symlink(res_path, "%s/%s" % (proj_path, "/exe/resources"))
-        else:    
-            projpath = self.config_proj_path + p4path[28:]
         
-        self.update_thread.start_update_and_compile(CUpdateThreadLogic.EOT_Create
-            , p4path, projpath, svn_path, video_svn_path)
+        svn_path, video_svn_path = self._transP4PathToSvnPath(p4path)
+        if "" != star_svn:
+            svn_path = star_svn
+        if "" != video_svn:
+            video_svn_path = video_svn
+
+        self.update_thread.start_update_and_compile(self.update_thread.EOT_Create
+            , p4path, proj_path, svn_path, video_svn_path)
         return True
 
     def CBCreateNewProj(self):

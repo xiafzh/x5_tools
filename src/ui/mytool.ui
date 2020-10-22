@@ -270,7 +270,7 @@
        <x>0</x>
        <y>20</y>
        <width>791</width>
-       <height>151</height>
+       <height>161</height>
       </rect>
      </property>
      <property name="frameShape">
@@ -282,8 +282,8 @@
      <widget class="QPushButton" name="btnCreateProj">
       <property name="geometry">
        <rect>
-        <x>700</x>
-        <y>100</y>
+        <x>690</x>
+        <y>130</y>
         <width>75</width>
         <height>23</height>
        </rect>
@@ -296,7 +296,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>20</y>
+        <y>10</y>
         <width>54</width>
         <height>12</height>
        </rect>
@@ -309,7 +309,7 @@
       <property name="geometry">
        <rect>
         <x>70</x>
-        <y>20</y>
+        <y>10</y>
         <width>601</width>
         <height>20</height>
        </rect>
@@ -338,7 +338,7 @@
       <property name="geometry">
        <rect>
         <x>70</x>
-        <y>60</y>
+        <y>40</y>
         <width>511</width>
         <height>20</height>
        </rect>
@@ -348,39 +348,13 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>60</y>
+        <y>40</y>
         <width>54</width>
         <height>12</height>
        </rect>
       </property>
       <property name="text">
        <string>项目路径</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="labelRes">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>100</y>
-        <width>54</width>
-        <height>12</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>资源路径</string>
-      </property>
-     </widget>
-     <widget class="QLineEdit" name="editResPath">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="geometry">
-       <rect>
-        <x>70</x>
-        <y>100</y>
-        <width>511</width>
-        <height>20</height>
-       </rect>
       </property>
      </widget>
      <widget class="QPushButton" name="btnProjPath">
@@ -390,23 +364,7 @@
       <property name="geometry">
        <rect>
         <x>590</x>
-        <y>60</y>
-        <width>75</width>
-        <height>23</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>选择目录...</string>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="btnSrcPath">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="geometry">
-       <rect>
-        <x>590</x>
-        <y>100</y>
+        <y>40</y>
         <width>75</width>
         <height>23</height>
        </rect>
@@ -419,7 +377,7 @@
       <property name="geometry">
        <rect>
         <x>690</x>
-        <y>60</y>
+        <y>50</y>
         <width>91</width>
         <height>17</height>
        </rect>
@@ -429,6 +387,116 @@
       </property>
       <property name="checked">
        <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_7">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>100</y>
+        <width>54</width>
+        <height>12</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>SVN游戏侧</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_8">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>130</y>
+        <width>54</width>
+        <height>12</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>SVN视频侧</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="editSVNStar">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>70</x>
+        <y>100</y>
+        <width>591</width>
+        <height>20</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="editSVNVideo">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>70</x>
+        <y>130</y>
+        <width>591</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="readOnly">
+       <bool>false</bool>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="editResPath">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>70</x>
+        <y>70</y>
+        <width>511</width>
+        <height>20</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnSrcPath">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>590</x>
+        <y>70</y>
+        <width>75</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>选择目录...</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="labelRes">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>70</y>
+        <width>54</width>
+        <height>12</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>资源路径</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkSVN">
+      <property name="geometry">
+       <rect>
+        <x>690</x>
+        <y>80</y>
+        <width>91</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>指定SVN地址</string>
       </property>
      </widget>
     </widget>
@@ -598,7 +666,7 @@
     <widget class="QCheckBox" name="checkTruncEditor">
      <property name="geometry">
       <rect>
-       <x>530</x>
+       <x>510</x>
        <y>200</y>
        <width>111</width>
        <height>17</height>

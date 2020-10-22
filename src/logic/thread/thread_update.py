@@ -25,7 +25,7 @@ class STopoData:
         self.state = self.S_IDLE
     
     def __str__(self):
-        return "%s %d" % (self.id, self.entry)
+        return "%s %d %s %s" % (self.id, self.entry, self.desc, self.cmd)
 
 class CUpdateThreadLogic:
     EOT_Create = 0
@@ -50,11 +50,9 @@ class CUpdateThreadLogic:
         conf_data = GetCommonXMLData("./config/common_config.xml", "CommonConfig/UpdateTopos")
         self.init_topo_data(conf_data, self.EOT_Update)
 
- 
     def init_topo_data(self, conf_data, type):
         if conf_data == None:
             return
-
         self.topo_data_copy[type] = {}
         topo_items = conf_data.getElementsByTagName("TopoItem")
         for item in topo_items:
@@ -77,7 +75,6 @@ class CUpdateThreadLogic:
         self.videosvnpath = videosvnpath
 
         self.topo_data = copy.deepcopy(self.topo_data_copy[type])
-
         self.check_update_running()
         return True
 
@@ -117,6 +114,7 @@ class CUpdateThreadLogic:
         if len(self.update_thread) == 0:
             self.is_running = False
             print(self.is_running)
+            self.lmgr.UpdateProjPath(self.p4path, self.projpath)
     
     def on_create_thread_running(self, id, log):
         self.lmgr.appendLog(id, log)
@@ -156,7 +154,7 @@ class CThreadCreateProj(QThread):
 
     def run(self):
         res = None
-        while (True):            
+        while (True):
             is_finish = self.proc.Finished()
             
             while True:

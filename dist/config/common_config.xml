@@ -17,7 +17,7 @@
         </TopoItem>        
         <TopoItem id="6" type="0" cmd = "create_p4_resources.bat" desc="P4 Update Resources">
         </TopoItem>        
-        <TopoItem id="7" type="0" cmd = "common_p4_data" desc="P4 Update Data">
+        <TopoItem id="7" type="0" cmd = "common_p4_data.bat" desc="P4 Update Data">
             <NextItem id="6" />
         </TopoItem>        
         <TopoItem id="8" type="0" cmd = "create_p4_client.bat" desc="P4 Update DebugBin">

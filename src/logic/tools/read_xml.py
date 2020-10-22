@@ -13,9 +13,9 @@ def GetCommonXMLData(file, path):
         ret_data = domtree
         for item in path_arr:
             curr_nodes = ret_data.getElementsByTagName(item)
-            if not curr_nodes and len(curr_nodes) > 0:
+            if None != curr_nodes and len(curr_nodes) > 0:
                 ret_data = curr_nodes[0]
-                
+
         return ret_data
     except Exception as err:
         print(err)

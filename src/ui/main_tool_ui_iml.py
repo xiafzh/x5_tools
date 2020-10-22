@@ -37,10 +37,9 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
 
     def init_widget_data(self):
         # 屏蔽掉不可用功能按钮
-        #self.btnCompile.setEnabled(False)
         self.cbProjects.setEnabled(False)
-        #self.checkOnlyAdd.setChecked(True)
-        #self.checkOnlyAdd.setEnabled(False)
+        self.btnProjPath.setVisible(False)
+        self.btnSrcPath.setVisible(False)
 
 
         self.cbIP.setEditable(True)
@@ -62,8 +61,7 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
         for ip in ipaddrs:
             if ip.startswith('192.168'):
                 self.cbIP.addItem(ip)
-                break
-
+                
     # 初始化QQ按钮
     def init_qq_btns(self):
         self.init_btn_menu()
@@ -124,6 +122,7 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
         
         self.checkAutoCreate.stateChanged.connect(self.on_auto_create_change)
         self.checkOnlyAdd.stateChanged.connect(self.on_auto_create_change)
+        self.checkSVN.stateChanged.connect(self.on_auto_create_change)
 
         self.btn_login.clicked.connect(self.on_click_login)
         self.log_combobox.currentTextChanged.connect(self.on_log_change)
@@ -197,17 +196,11 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
         if self.checkAutoCreate.isChecked():
             res, branch_name = self.lmgr.UpdateProjPath(p4path)
             if res:
-                self.cbBranches.addItem(branch_name)    
+                self.cbBranches.addItem(branch_name)
             return        
         
-
-        proj_path = self.editProjPath.text()
-        if "" == proj_path:
-            print("空白")
-            return
-        res_path = self.editResPath.text()
-        
-        res, branch_name = self.lmgr.UpdateProjPath(p4path, proj_path, res_path)
+        proj_path = self.editProjPath.text()        
+        res, branch_name = self.lmgr.UpdateProjPath(p4path, proj_path)
         if res:
             self.cbBranches.addItem(branch_name)
     
@@ -221,29 +214,41 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
             self.cbBranches.removeItem(branch_index)
 
     def on_auto_create_change(self):
-        if self.checkAutoCreate.isChecked():
-            self.editProjPath.setEnabled(False)
-            self.btnProjPath.setEnabled(False)
-            self.editResPath.setEnabled(False)
-            self.btnSrcPath.setEnabled(False)
-        else:
+        self.editSVNStar.setEnabled(False)
+        self.editSVNVideo.setEnabled(False) 
+        self.editResPath.setEnabled(False)
+        self.btnSrcPath.setEnabled(False)
+        self.editProjPath.setEnabled(False)
+        self.btnProjPath.setEnabled(False)
+        
+        if not self.checkAutoCreate.isChecked():
             self.editProjPath.setEnabled(True)
             self.btnProjPath.setEnabled(True)
-            if self.checkOnlyAdd.isChecked():
-                self.editResPath.setEnabled(False)
-                self.btnSrcPath.setEnabled(False)
-            else:
+            if not self.checkOnlyAdd.isChecked():
                 self.editResPath.setEnabled(True)
                 self.btnSrcPath.setEnabled(True)
+                self.editSVNStar.setEnabled(self.checkSVN.isChecked())
+                self.editSVNVideo.setEnabled(self.checkSVN.isChecked())                
+           
 
     def slot_click_create_proj(self):
         if self.checkOnlyAdd.isChecked():
             self.on_add_proj()
         else:
+            projpath = self.editProjPath.text()
+            respath = self.editResPath.text()
+            if self.checkAutoCreate.isChecked():
+                projpath = ""
+                respath = ""
+
+            svn_star = self.editSVNStar.text()
+            svn_video = self.editSVNVideo.text()
+            if not self.checkSVN.isChecked():
+                svn_star = ""
+                svn_video = ""
+
             res = self.lmgr.CreateNewProj(self.editP4Path.text()
-                , self.checkAutoCreate.isChecked()
-                , self.editProjPath.text()
-                , self.editResPath.text())
+                , projpath, respath, svn_star, svn_video)
             if not res:
                 self.log_editbox.append("CreateFailed")
                 return
@@ -286,7 +291,7 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
         self.lmgr.change_select_branches(branch)
     
     def slot_click_choose_dir(self, el):
-        print(el)
+        print(el, os.getcwd())
         choose_dir = QFileDialog.getExistingDirectory(None, "选择文件夹", os.getcwd())
         if "" == choose_dir:
             return 
