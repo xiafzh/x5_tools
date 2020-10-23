@@ -4,6 +4,7 @@ import os
 import stat
 import subprocess
 from PyQt5.QtCore import QThread
+from src.logic.tools.read_xml import *
 
 # 主要工作线程
 class CWorkThread(QThread):
@@ -43,21 +44,22 @@ class CThreadStartServer(QThread):
         f_w.write(all_str)
         f_w.close()
 
+    def get_app_box_list(self):
+        return GetServerAppBoxList(self.pwd+"/config/macros.xml", self.pwd+"/config/admin_proxy.xml")        
+
     def run(self):
+        port_list = self.get_app_box_list()
+        if None == port_list or len(port_list) == 0:
+            return
+
         try:
             self.data_mgr.ThreadSafeChangeDir(self.pwd)
 
             self.change_macros_ip()            
-
-            subprocess.Popen('start app_box_d', shell=True, stdout = subprocess.PIPE
-                , stdin=subprocess.PIPE, stderr=subprocess.PIPE, encoding="gb18030")
-            subprocess.Popen('start app_box_d -port 27153', shell=True, stdout = subprocess.PIPE
-                , stdin=subprocess.PIPE, stderr=subprocess.PIPE, encoding="gb18030")
-            subprocess.Popen('start app_box_d -port 27154', shell=True, stdout = subprocess.PIPE
-                , stdin=subprocess.PIPE, stderr=subprocess.PIPE, encoding="gb18030")
-            subprocess.Popen('start app_box_d -port 27156', shell=True, stdout = subprocess.PIPE
-                , stdin=subprocess.PIPE, stderr=subprocess.PIPE, encoding="gb18030")
-            self.data_mgr.ThreadSafeChangeDirOver()  
+            for item in port_list:
+                subprocess.Popen('start app_box_d -port %s' % item, shell=True, stdout = subprocess.PIPE
+                    , stdin=subprocess.PIPE, stderr=subprocess.PIPE, encoding="gb18030")
+            self.data_mgr.ThreadSafeChangeDirOver()
             #休眠5秒
             self.sleep(5)
             self.data_mgr.ThreadSafeChangeDir(self.pwd)

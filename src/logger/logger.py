@@ -2,7 +2,7 @@
 
 import os
 import time
-from PyQt5.QtCore import QThread, QReadWriteLock
+from PyQt5.QtCore import QThread
 from conf.common import*
 
 
@@ -31,7 +31,6 @@ class CLogger(QThread):
 
         self.log_buffer = [[], []]
         self.write_index = 0
-        self.log_locker = QReadWriteLock()
         
         self.all_logger = {}
         self.log_path = os.getcwd() + logs_path
@@ -72,50 +71,49 @@ class CLogger(QThread):
         self.WriteLog(log_id, self.LogLv_Error, content_str, is_new)
 
     def WriteLog(self, log_id, log_lv, content, is_new = False):
-        self.log_locker.lockForRead()
         self.log_buffer[self.write_index].append(SLogBufferData(log_id, log_lv, content, is_new))
-        self.log_locker.unlock()
-    
+        
     def __SwitchIndex(self):
-        self.log_locker.lockForWrite()
         self.write_index = 1 - self.write_index
         self.log_buffer[self.write_index].clear()
-        self.log_locker.unlock()
-    
+        
     def __CheckLogger(self):
         # 暂时先不处理，所有用到的日志文件全部打开
         pass
     
     def __SaveLogBuffer(self):
-        if os.path.exists(self.log_path) and not os.path.isdir(self.log_path):
-            os.remove(self.log_path)
+        try:
+            if os.path.exists(self.log_path) and not os.path.isdir(self.log_path):
+                os.remove(self.log_path)
 
-        if not os.path.exists(self.log_path):
-            os.makedirs(self.log_path)
+            if not os.path.exists(self.log_path):
+                os.makedirs(self.log_path)
 
-        #print(len(self.log_buffer[1 - self.write_index]))
-        for item in self.log_buffer[1 - self.write_index]:
-            # 低等级日志不输出
-            if item.log_lv < self.LogLv_Config_LV:
-                continue;
-            # 找type 如果有 更新时间 如果没有新增一个
-            logger = None
-            if item.log_id in self.all_logger:
-                logger = self.all_logger[item.log_id]
-                if item.is_new:
-                    logger.file_writer.close()
-                    logger.file_name = "%s/%s%s.log" % (self.log_path, item.log_id, time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime()))
+            #print(len(self.log_buffer[1 - self.write_index]))
+            for item in self.log_buffer[1 - self.write_index]:
+                # 低等级日志不输出
+                if item.log_lv < self.LogLv_Config_LV:
+                    continue;
+                # 找type 如果有 更新时间 如果没有新增一个
+                logger = None
+                if item.log_id in self.all_logger:
+                    logger = self.all_logger[item.log_id]
+                    if item.is_new:
+                        logger.file_writer.close()
+                        logger.file_name = "%s/%s%s.log" % (self.log_path, item.log_id, time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime()))
+                        logger.file_writer = open(logger.file_name, "a")
+                else:
+                    logger = SLogTypeData("%s/%s%s.log" % (self.log_path, item.log_id, time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime())))
                     logger.file_writer = open(logger.file_name, "a")
-            else:
-                logger = SLogTypeData("%s/%s%s.log" % (self.log_path, item.log_id, time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime())))
-                logger.file_writer = open(logger.file_name, "a")
-                self.all_logger.update({item.log_id : logger})
-            
-            #print(logger.file_writer, item.content)
-            logger.file_writer.write("%s %s\n" % (self.__GetLogPrefixByLevel(item.log_lv), item.content))
+                    self.all_logger.update({item.log_id : logger})
+                
+                #print(logger.file_writer, item.content)
+                logger.file_writer.write("%s %s\n" % (self.__GetLogPrefixByLevel(item.log_lv), item.content))
 
-        for key in self.all_logger:
-            self.all_logger[key].file_writer.flush()
+            for key in self.all_logger:
+                self.all_logger[key].file_writer.flush()
+        except Exception as err:
+            print(err)
 
     def run(self):
         while True:
