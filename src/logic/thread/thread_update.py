@@ -79,42 +79,48 @@ class CUpdateThreadLogic:
         return True
 
     def check_update_running(self):
-        for key in self.topo_data:
-            topo = self.topo_data[key]
-            if 0 == topo.entry and topo.state == STopoData.S_IDLE:
-                exe_cmd = self.__GetExecuteCMD(topo.type, topo.cmd)
+        try:
+            for key in self.topo_data:
+                topo = self.topo_data[key]
+                if 0 == topo.entry and topo.state == STopoData.S_IDLE:
+                    exe_cmd = self.__GetExecuteCMD(topo.type, topo.cmd)
 
-                topo.state = STopoData.S_RUNNING
-                self.lmgr.ThreadSafeChangeDir(os.getcwd() + "/scripts")
-                self.update_thread[topo.id] = CThreadCreateProj(topo.id, topo.desc, topo.cmd, exe_cmd)
-                self.lmgr.ThreadSafeChangeDirOver()
-                
-                self.update_thread[topo.id].finishSin.connect(self.on_create_thread_finish)
-                self.update_thread[topo.id].logAddSin.connect(self.on_create_thread_running)
-                self.update_thread[topo.id].start()
-                self.lmgr.appendLog(work_logger, "begin %s %s %s" % (topo.desc, topo.cmd, exe_cmd))
+                    topo.state = STopoData.S_RUNNING
+                    self.lmgr.ThreadSafeChangeDir(os.getcwd() + "/scripts")
+                    self.update_thread[topo.id] = CThreadCreateProj(topo.id, topo.desc, topo.cmd, exe_cmd)
+                    self.lmgr.ThreadSafeChangeDirOver()
+                    
+                    self.update_thread[topo.id].finishSin.connect(self.on_create_thread_finish)
+                    self.update_thread[topo.id].logAddSin.connect(self.on_create_thread_running)
+                    self.update_thread[topo.id].start()
+                    self.lmgr.appendLog(work_logger, "begin %s %s %s" % (topo.desc, topo.cmd, exe_cmd))
+        except Exception as err:
+            self.lmgr.appendLog(work_logger, err.__str__())
 
     def on_create_thread_finish(self, id, res):
-        if id not in self.update_thread:
-            print("no ", id)
-            return
-        
-        del self.update_thread[id]
+        try:
+            if id not in self.update_thread:
+                print("no ", id)
+                return
+            
+            del self.update_thread[id]
 
-        for key in self.topo_data:
-            topo = self.topo_data[key]
-            if topo.id == id:
-                for del_id in topo.next:
-                    self.topo_data[del_id].entry -= 1 
-                del self.topo_data[key]
-                break
-        
-        self.check_update_running()
+            for key in self.topo_data:
+                topo = self.topo_data[key]
+                if topo.id == id:
+                    for del_id in topo.next:
+                        self.topo_data[del_id].entry -= 1 
+                    del self.topo_data[key]
+                    break
+            
+            self.check_update_running()
 
-        if len(self.update_thread) == 0:
-            self.is_running = False
-            print(self.is_running)
-            self.lmgr.UpdateProjPath(self.p4path, self.projpath)
+            if len(self.update_thread) == 0:
+                self.is_running = False
+                print(self.is_running)
+                self.lmgr.UpdateProjPath(self.p4path, self.projpath)
+        except Exception as err:
+            self.lmgr.appendLog(work_logger, "on_create_thread_finish %s" % err.__str__())
     
     def on_create_thread_running(self, id, log):
         self.lmgr.appendLog(id, log)

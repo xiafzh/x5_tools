@@ -85,16 +85,14 @@ class CMainLogic:
         pass
 
     def saveShelveData(self, key, value):
-        self.mutex.lock()
-        shelve_data = shelve.open(common_db_path, flag='c', protocol=2, writeback=True)
-        shelve_data[key] = value
-        shelve_data.close()
-        self.mutex.unlock()
+        try:
+            shelve_data = shelve.open(common_db_path, flag='c', protocol=2, writeback=True)
+            shelve_data[key] = value
+            shelve_data.close()
+        except Exception as err:
+            self.appendLog(work_logger, err.__str__())
     
-    # 逻辑接口
-    def startCompile(self):
-        print("compile")
-    
+    # 逻辑接口    
     def start_vs(self, path, solution, branch):
         try:
             target_path = self._transBranchToPath(branch) + "/src/" + path
@@ -164,35 +162,33 @@ class CMainLogic:
     def getAllLoginQQ(self):
         return self.all_qqs
     
-    
     def UpdateProjPath(self, p4path, projpath = ""):
-        p4path = p4path.rstrip("/").rstrip("\\")
-        (year, title) = self._transP4PathToBranchParam(p4path)
-        print(year, title, p4path)
-        if "" == projpath:
-            projpath = self.config_proj_path + p4path[28:]
+        try:
+            p4path = p4path.rstrip("/").rstrip("\\")
+            (year, title) = self._transP4PathToBranchParam(p4path)
+            print(year, title, p4path)
+            if "" == projpath:
+                projpath = self.config_proj_path + p4path[28:]
 
-        for item in self.all_braches:
-            if item.title == title:
-                item.p4path = p4path
-                item.path = projpath
-                self.saveShelveData('branch', self.all_braches)
-                return False, ""
+            for item in self.all_braches:
+                if item.title == title:
+                    item.p4path = p4path
+                    item.path = projpath
+                    self.saveShelveData('branch', self.all_braches)
+                    return False, ""
 
-        branch_item = SBranchItem(title, projpath, p4path, '', '')
-        '''       
-        if title == trunc_name:
-            branch_item.svnpath = star_svn_path % trunc_name
-            branch_item.video_svn_path = star_svn_path % video_trunc_name
-        else:
-            branch_item.svnpath = star_svn_path % branch_svn_subfix % (year, title)
-            branch_item.video_svn_path = star_svn_path % video_branch_svn_subfix % (year, title)
-        '''
-        self.all_braches.append(branch_item)
-        self.saveShelveData('branch', self.all_braches)
+            branch_item = SBranchItem(title, projpath, p4path, '', '')
+    
+            self.all_braches.append(branch_item)
+            self.saveShelveData('branch', self.all_braches)
 
-        self.appendLog(work_logger, "append_branch %s %s" % (title, branch_item.projpath))
-        return True, title
+            self.appendLog(work_logger, "append_branch %s %s" % (title, branch_item.projpath))
+            return True, title
+        except Exception as err:
+            self.appendLog(work_logger, "UpdateProjPath %s" % err.__str__())
+        
+        return False, ""
+       
     
     def RemoveProjPath(self, branch):
         for index in range(0, len(self.all_braches)):
