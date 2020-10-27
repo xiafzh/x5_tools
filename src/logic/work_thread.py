@@ -65,8 +65,12 @@ class CThreadStartServer(QThread):
             self.data_mgr.ThreadSafeChangeDir(self.pwd)
             subprocess.Popen('start admin_proxy_d ::-autostartall', shell=True, stdout = subprocess.PIPE
                 , stdin=subprocess.PIPE, stderr=subprocess.PIPE, encoding="gb18030")
-            subprocess.Popen('start admin_client_new', shell=True, stdout = subprocess.PIPE
-                , stdin=subprocess.PIPE, stderr=subprocess.PIPE, encoding="gb18030")
+            if os.path.exists("admin_client_new.exe"):
+                subprocess.Popen('start admin_client_new', shell=True, stdout = subprocess.PIPE
+                    , stdin=subprocess.PIPE, stderr=subprocess.PIPE, encoding="gb18030")
+            else:
+                subprocess.Popen('start admin_client', shell=True, stdout = subprocess.PIPE
+                    , stdin=subprocess.PIPE, stderr=subprocess.PIPE, encoding="gb18030")
         except Exception as err:
             self.data_mgr.logger.LogError("start server", err.__str__())
         finally:

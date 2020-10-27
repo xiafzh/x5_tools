@@ -115,7 +115,9 @@ class CMainLogic:
                 target_path += '/debug_bin'
             else:
                 target_path += '/bin'
-            if not self._checkTargetIp(ip, target_path):
+            res, res_str = self._checkTargetIp(ip, target_path)
+            if not res:
+                self.appendLog(work_logger, "start_login %s" % res_str)
                 return
             os.chdir(target_path)
             subprocess.Popen(login_cmd_format % (qq, qq), shell=True, stdout = subprocess.PIPE
@@ -124,7 +126,7 @@ class CMainLogic:
             self.logger.LogDebug(work_logger, "login ", qq)
             return qq
         except Exception as err:
-            self.logger.LogError(work_logger, type(err), err.__str__())
+            self.appendLog(work_logger, err.__str__())
             return err.__str__()
     
     def startServer(self, branch, ip):
@@ -165,6 +167,7 @@ class CMainLogic:
     def UpdateProjPath(self, p4path, projpath = ""):
         try:
             p4path = p4path.rstrip("/").rstrip("\\")
+            projpath = projpath.rstrip("/").rstrip("\\")
             (year, title) = self._transP4PathToBranchParam(p4path)
             print(year, title, p4path)
             if "" == projpath:
@@ -173,7 +176,7 @@ class CMainLogic:
             for item in self.all_braches:
                 if item.title == title:
                     item.p4path = p4path
-                    item.path = projpath
+                    item.projpath = projpath
                     self.saveShelveData('branch', self.all_braches)
                     return False, ""
 
@@ -367,9 +370,8 @@ class CMainLogic:
         client_config_file = path + "/config/client_config.ini"
         # 配置文件不存在
         if not os.path.exists(config_file) or not os.path.exists(client_config_file):
-            return False
+            return False, "path err %s" % path
         
-        self.mutex.lock()
         try:
             configer = ConfigParser()
             configer.read(config_file)
@@ -377,11 +379,11 @@ class CMainLogic:
             section = "Network"
             option = "hallserverip"
             if not configer.has_option(section, option):        
-                return False
+                return False, "no ip config"
 
             config_ip = configer.get(section, option) 
             if ip == config_ip:
-                return True
+                return True, ""
             
             # 取消只读
             os.chmod(config_file, stat.S_IWRITE)
@@ -391,12 +393,11 @@ class CMainLogic:
             file_w = open(config_file, 'w', encoding='ansi')
             configer.write(file_w)
             file_w.close()
-            return True
+            return True, ""
         except Exception as err:
-            print(err)
+            return False, err.__str__()
         finally:
             configer.clear()
-            self.mutex.unlock()
         
     # p4path换分支名
     def _transP4PathToBranchParam(self, p4path):
