@@ -715,6 +715,19 @@
       <string>取消只读</string>
      </property>
     </widget>
+    <widget class="QPushButton" name="btnTest">
+     <property name="geometry">
+      <rect>
+       <x>640</x>
+       <y>240</y>
+       <width>75</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>测试用的按钮</string>
+     </property>
+    </widget>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">

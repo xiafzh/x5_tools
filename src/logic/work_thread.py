@@ -3,19 +3,47 @@
 import os
 import stat
 import subprocess
+import datetime
 from PyQt5.QtCore import QThread
 from src.logic.tools.read_xml import *
+from src.logic.tools.date_time import *
 
 # 主要工作线程
 class CWorkThread(QThread):
+    # 更新时间
+    UPDATE_INTERVAL_MIN = 60
+
     def __init__(self, data_mgr):
         super(CWorkThread, self).__init__()
         self.data_mgr = data_mgr
+        self.remote_datetime = GetNetTime()
+        self.last_check_datetime_sec = datetime.datetime.now()
+        self.last_check_datatime_min = datetime.datetime.now()
 
+    # 增加工作
+    def AppendWork(type):
+        print("add work %d" % type)
+
+    def DeleteWork(type):
+        print(1)
 
     def run(self):
         while True:
-            #print("main_work_thread run")
+            now_date_time = datetime.datetime.now()
+            
+            # 每秒处理的事件
+
+            self.last_check_datetime_sec = now_date_time
+
+            if (now_date_time - self.last_check_datatime_min).seconds >= self.UPDATE_INTERVAL_MIN:
+                # 每分钟处理的事件
+
+                now_net_time = GetNetTime()
+                # 跨天处理的事件
+                if now_net_time.date() != self.remote_datetime.date():
+                    print("an other day")
+
+                self.remote_datetime = now_date_time
             self.sleep(1)
 
 class CThreadStartServer(QThread):

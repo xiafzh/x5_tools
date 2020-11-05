@@ -13,3 +13,6 @@ class SProjectItem:
     def __init__(self, title):
         self.title = title
 
+
+WT_COMPILE = 1  # 定时编译
+

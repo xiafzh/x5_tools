@@ -10,6 +10,7 @@ from src.logic.main_logic import *
 from src.logic.thread.thread_create_proj import *
 from conf.common import *
 import socket
+from src.ui.message_box import *
 
 
 class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
@@ -140,6 +141,8 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
         self.BtnConsoleReplace.clicked.connect(self.slot_click_console_replacer)
         self.btnUIEditor.clicked.connect(self.slot_click_ui_editor)
         self.btnCancelReadonly.clicked.connect(self.slot_click_cancel_readonly)
+
+        self.btnTest.clicked.connect(self.slot_click_test_fun)
 
     def slot_click_vs_star_client(self):
         self.lmgr.start_vs("star", "build_client.sln", self.cbBranches.currentText())
@@ -316,3 +319,9 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
 
     def define_qq_btn(self):
         print("未完成")
+
+    def slot_click_test_fun(self):
+        self.lmgr.test_fun()
+        message_box = CMyMessageBox.information(self, "标题"
+            , "对话框这姑娘问", CMyMessageBox.Yes | CMyMessageBox.No, CMyMessageBox.Yes)
+        #print(dir(QMessageBox))

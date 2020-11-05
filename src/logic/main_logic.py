@@ -15,7 +15,7 @@ from src.logic.work_thread import *
 from src.logic.thread.thread_create_proj import *
 from src.logic.thread.thread_update import *
 from x51_tools import X51Compiler
-
+from src.logic.tools.date_time import *
 
 # 不耗时的逻辑处理、数据缓存
 class CMainLogic:
@@ -80,6 +80,8 @@ class CMainLogic:
         configer.clear()
 
         self.update_thread = CUpdateThreadLogic(self)
+        self.work_thread = CWorkThread(self)
+        self.work_thread.start()
 
     def closeWindow(self):
         pass
@@ -436,6 +438,9 @@ class CMainLogic:
         self.logger.LogRelease("compile", "ssss", "dddd")
         self.logger.LogError("compile", "ssss", "dddd")
         
+    def test_fun(self):
+        print(GetNetTime())
+
 
     def testSlotStr(self, s, l):
         print(s, l)
