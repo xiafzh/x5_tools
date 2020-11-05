@@ -103,6 +103,7 @@ class CUpdateThreadLogic:
                 print("no ", id)
                 return
             
+            self.update_thread[id].exit(0)
             del self.update_thread[id]
 
             for key in self.topo_data:
