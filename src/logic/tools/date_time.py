@@ -16,7 +16,8 @@ def GetNetTime():
             time_arr = re.split('[];=]',rep.text.replace("\r\n", ""))
 
             print("net time")
-            return datetime.datetime(time_arr[3], time_arr[5], time_arr[7], time_arr[9], time_arr[11], time_arr[13])
+            return datetime.datetime(int(time_arr[3]), int(time_arr[5]), int(time_arr[7])
+                , int(time_arr[9]), int(time_arr[11]), int(time_arr[13]))
         else:
             return datetime.datetime.now()
     except Exception as err:

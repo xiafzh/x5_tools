@@ -79,6 +79,7 @@ class CMainLogic:
 
         configer.clear()
 
+        self.start_server_thread = CThreadStartServer(self)
         self.update_thread = CUpdateThreadLogic(self)
         self.work_thread = CWorkThread(self)
         self.work_thread.start()
@@ -134,10 +135,8 @@ class CMainLogic:
     def startServer(self, branch, ip):
         try:
             target_path = self._transBranchToPath(branch) + "/exe"
+            self.start_server_thread.Start(target_path + '/server', ip)
             
-            thread = CThreadStartServer(target_path + '/server', self, ip)
-            thread.start()
-            thread.wait()
             self.logger.LogDebug(work_logger, "start server")
         except Exception as err:
             self.logger.LogError(work_logger, "start server error:", err.__str__())
