@@ -62,6 +62,8 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
         for ip in ipaddrs:
             if ip.startswith('192.168'):
                 self.cbIP.addItem(ip)
+
+        self.CBWorkSpace.addItems(self.lmgr.workspaces)
                 
     # 初始化QQ按钮
     def init_qq_btns(self):
@@ -197,13 +199,13 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
 
         #如果勾选了，取P4路径计算
         if self.checkAutoCreate.isChecked():
-            res, branch_name = self.lmgr.UpdateProjPath(p4path)
+            res, branch_name = self.lmgr.UpdateProjPath(p4path, self.CBWorkSpace.currentText())
             if res:
                 self.cbBranches.addItem(branch_name)
             return        
         
         proj_path = self.editProjPath.text()        
-        res, branch_name = self.lmgr.UpdateProjPath(p4path, proj_path)
+        res, branch_name = self.lmgr.UpdateProjPath(p4path, self.CBWorkSpace.currentText(), proj_path)
         if res:
             self.cbBranches.addItem(branch_name)
     
@@ -256,7 +258,7 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
                 self.log_editbox.append("CreateFailed")
                 return
         #TODO::刷新分支
-    
+
     def RefreshWorkLogs(self, log_opt, log_id, log_content = ""):
         #print("refresh log", log_opt, log_id, len(log_content))
         if LogOpt_Init == log_opt:

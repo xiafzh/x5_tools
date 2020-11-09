@@ -6,6 +6,7 @@ import shelve
 import re
 import time
 import stat
+import socket
 from configparser import *
 from src.logic.main_data import *
 from conf.common import *
@@ -53,6 +54,23 @@ class CMainLogic:
             self.sel_branch = ''
         shelve_data.close()
 
+        self.read_common_config()
+
+        self.init_workspace()
+
+        self.start_server_thread = CThreadStartServer(self)
+        self.update_thread = CUpdateThreadLogic(self)
+        # 常规工作进程-主要处理Update(time)
+        self.work_thread = CWorkThread(self)
+        self.work_thread.workStart.connect(self.WorkStart)
+        self.work_thread.start()
+
+        self.work_thread.AppendWork(WT_COMPILE, self.work_thread.ET_Daily, {}, 0)
+
+    def closeWindow(self):
+        pass
+
+    def read_common_config(self):
         configer = ConfigParser()
         configer.read(common_config_path)
         
@@ -77,15 +95,66 @@ class CMainLogic:
         if configer.has_option(section, option):
             self.svn_password = configer.get(section, option)
 
+        section = "p4"
+        option = "username"
+        if configer.has_option(section, option):
+            self.p4_username = configer.get(section, option)
+        
+        option = "password"
+        if configer.has_option(section, option):
+            self.p4_password = configer.get(section, option)
+
+        option = "host"
+        if configer.has_option(section, option):
+            self.p4_host = configer.get(section, option)
+
         configer.clear()
 
-        self.start_server_thread = CThreadStartServer(self)
-        self.update_thread = CUpdateThreadLogic(self)
-        self.work_thread = CWorkThread(self)
-        self.work_thread.start()
+    def init_workspace(self):
+        try:
+            self.ThreadSafeChangeDir("./scripts")
+            cpobj = X51Compiler()
+            cpobj.ExecuteFile("p4_common_clients.bat", self.p4_username, os.getcwd())
+            workspace_list = []
+            while True:
+                is_finish = cpobj.Finished()
+                        
+                while True:
+                    out_str = cpobj.GetOutputString()
+                    if "" == out_str:
+                        break
+                    
+                    data_arr = out_str.split(" ")
+                    if len(data_arr) < 2 or data_arr[0] != "Client":
+                        continue
+                
+                    workspace_list.append(data_arr[1])
+                    
+                if is_finish:
+                    break
+            
+            host_name = socket.gethostname()
 
-    def closeWindow(self):
-        pass
+            self.workspaces = []
+            for key in workspace_list:
+                cpobj.ExecuteFile("p4_common_workspace.bat", key, os.getcwd())
+                while True:
+                    is_finish = cpobj.Finished()
+                        
+                    while True:
+                        out_str = cpobj.GetOutputString()
+                        if "" == out_str:
+                            break
+                        
+                        if out_str.startswith("Host"):
+                            data_arr = out_str.split("\t")
+                            if len(data_arr) >= 2 and data_arr[1] == host_name:
+                                self.workspaces.append(key)
+                        
+                    if is_finish:
+                        break
+        finally:
+            self.ThreadSafeChangeDirOver()
 
     def saveShelveData(self, key, value):
         try:
@@ -165,7 +234,7 @@ class CMainLogic:
     def getAllLoginQQ(self):
         return self.all_qqs
     
-    def UpdateProjPath(self, p4path, projpath = ""):
+    def UpdateProjPath(self, p4path, workspace, projpath = ""):
         try:
             p4path = p4path.rstrip("/").rstrip("\\")
             projpath = projpath.rstrip("/").rstrip("\\")
@@ -181,7 +250,7 @@ class CMainLogic:
                     self.saveShelveData('branch', self.all_braches)
                     return False, ""
 
-            branch_item = SBranchItem(title, projpath, p4path, '', '')
+            branch_item = SBranchItem(title, projpath, p4path, workspace)
     
             self.all_braches.append(branch_item)
             self.saveShelveData('branch', self.all_braches)
@@ -343,6 +412,9 @@ class CMainLogic:
         finally:
             return True
 
+    def WorkStart(self, type, params):
+        print("start work:", type, params)
+
     # 分支换路径
     def _transBranchToPath(self, branch):
         choose_item = None
@@ -430,6 +502,7 @@ class CMainLogic:
 
         return svn_path, video_svn_path
  
+
 
     # 一些测试代码
     def test_thread(self):

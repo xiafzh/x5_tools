@@ -1,0 +1,4 @@
+
+@ECHO OFF
+SEt P4USERNAME=%1
+p4 clients -u %P4USERNAME%

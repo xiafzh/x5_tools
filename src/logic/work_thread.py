@@ -4,49 +4,120 @@ import os
 import stat
 import subprocess
 import datetime
+import time
 import psutil
-from PyQt5.QtCore import QThread
+from PyQt5.QtCore import QThread, pyqtSignal
 from src.logic.tools.read_xml import *
 from src.logic.tools.date_time import *
+from src.logic.main_data import *
 
 # 主要工作线程
 class CWorkThread(QThread):
     # 更新时间
-    UPDATE_INTERVAL_MIN = 60
+    UPDATE_INTERVAL_MIN = 1
+
+    # 执行类型
+    ET_Frame = 0 #每帧
+    ET_Second = 1 # 每秒
+    ET_Minute = 2 # 每分钟
+    ET_Hour = 3 # 每小时
+    ET_Daily = 4 # 每天
+    ET_Weekly = 5 # 每周
+
+
+    workStart = pyqtSignal(int, dict)
 
     def __init__(self, data_mgr):
         super(CWorkThread, self).__init__()
         self.data_mgr = data_mgr
-        self.remote_datetime = GetNetTime()
-        self.last_check_datetime_sec = datetime.datetime.now()
-        self.last_check_datatime_min = datetime.datetime.now()
+        self.local_datetime = time.time()
+        self.remote_datetime = GetNetTimeMS()
+
+        print("local_time:", self.local_datetime, ", remote_time:", self.remote_datetime)
+        self.last_check_datetime_sec = self.local_datetime
+        self.last_check_datatime_min = self.local_datetime
+
+        self.work_map = {}
+        self.exe_map = {}
+        self.exe_map[self.ET_Frame] = []
+        self.exe_map[self.ET_Second] = []
+        self.exe_map[self.ET_Minute] = []
+        self.exe_map[self.ET_Hour] = []
+        self.exe_map[self.ET_Daily] = []
+        self.exe_map[self.ET_Weekly] = []
+
+        self.delete_work = []
 
     # 增加工作
-    def AppendWork(type):
+    def AppendWork(self, type, exe_type, params, interval = 0):
         print("add work %d" % type)
+        if exe_type not in self.exe_map:
+            return False
 
-    def DeleteWork(type):
-        print(1)
+        if type in self.work_map:
+            pass
+        else:
+            new_work = STimerInfo()
+            new_work.work_type = type
+            new_work.exe_type = exe_type
+            new_work.params = params
+            new_work.start_interval = interval
+            self.work_map[type] = new_work
+            
+            self.exe_map[exe_type].append(type)
+
+        return True
+
+    def DeleteWork(self, type):
+        self.delete_work.append(type)
+
+    def ResetDaily(self):
+        for key in self.exe_map[self.ET_Daily]:
+            if key not in self.work_map:
+                self.DeleteWork(key)
+                continue
+
+            self.work_map[key].has_executed = False
 
     def run(self):
         while True:
-            now_date_time = datetime.datetime.now()
+            now_date_time = time.time()
+            delta_time = now_date_time - self.local_datetime
             
+            now_remote_date_time = self.remote_datetime + delta_time
             # 每秒处理的事件
 
             self.last_check_datetime_sec = now_date_time
 
-            if (now_date_time - self.last_check_datatime_min).seconds >= self.UPDATE_INTERVAL_MIN:
+            if now_date_time - self.last_check_datatime_min >= self.UPDATE_INTERVAL_MIN:
                 # 每分钟处理的事件
 
-                now_net_time = GetNetTime()
-                # 跨天处理的事件
-                if now_net_time.date() != self.remote_datetime.date():
-                    print("an other day")
 
-                self.remote_datetime = now_net_time
+                # 跨天处理的事件
+                if not IsSameDay_TS(now_remote_date_time, self.remote_datetime):
+                    # 跨天，重置一下每日执行
+                    self.ResetDaily()
+
+                # 计算当前距离每天起始时间的间隔
+                daily_interval = 0                    
+                for key in self.exe_map[self.ET_Daily]:
+                    if key not in self.work_map:
+                        self.DeleteWork(key)
+                        continue
+
+                    if (self.work_map[key].has_executed):
+                        continue
+                    
+                    if daily_interval >= self.work_map[key].start_interval:
+                        self.work_map[key].has_executed = True
+                        self.workStart.emit(self.work_map[key].work_type, self.work_map[key].params)
+
+                    print(self.work_map[key])
                 self.last_check_datatime_min = now_date_time
-            self.sleep(1)
+            
+            self.local_datetime = now_date_time
+            self.remote_datetime = now_remote_date_time
+
 
 # 启动服务器的线程
 class CThreadStartServer(QThread):
@@ -70,6 +141,7 @@ class CThreadStartServer(QThread):
 
     def Start(self, pwd, ip):
         if self.is_running:
+            #print("start thread is running")
             return False
 
         self.ip = ip
@@ -99,10 +171,10 @@ class CThreadStartServer(QThread):
         return GetServerAppBoxList(self.pwd+"/config/macros.xml", self.pwd+"/config/admin_proxy.xml")        
 
     def get_stop_process_list(self, path):
-        print(None)
+        #print(None)
         res = [[], []]
         psids = psutil.pids()
-        print(psids)
+        #print(psids)
         for item in psids:
             try:
                 pinfo = psutil.Process(item)
@@ -122,7 +194,7 @@ class CThreadStartServer(QThread):
                 return
 
             stop_plist = self.get_stop_process_list(self.pwd)
-            print(stop_plist)
+            #print(stop_plist)
             for plist in stop_plist:
                 for pid in plist:
                     os.popen("taskkill /F /pid %d" % pid)
@@ -151,6 +223,7 @@ class CThreadStartServer(QThread):
             self.data_mgr.logger.LogError("start server", err.__str__())
         finally:
             self.data_mgr.ThreadSafeChangeDirOver()
-            self.isRunning = False
+            self.is_running = False
+            #print("start server over")
         
 
