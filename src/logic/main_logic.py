@@ -37,25 +37,9 @@ class CMainLogic:
         (dirp, filep) = os.path.split(common_config_path)
         if not os.path.exists(dirp):
             os.makedirs(dirp)
-        
-        shelve_data = shelve.open(common_db_path, flag='c', protocol=2, writeback=True)
-        # 初始化db
-        if 'qq' not in shelve_data:
-            shelve_data['qq'] = []
-        if 'branch' not in shelve_data:
-            shelve_data['branch'] = []
 
-        # 初始化数据
-        self.all_qqs = shelve_data['qq']
-        self.all_braches = shelve_data['branch']
-        if 'sel_branch' in shelve_data:
-            self.sel_branch = shelve_data['sel_branch']
-        else:
-            self.sel_branch = ''
-        shelve_data.close()
-
+        self.init_shelve_data()
         self.read_common_config()
-
         self.init_workspace()
 
         self.start_server_thread = CThreadStartServer(self)
@@ -65,10 +49,29 @@ class CMainLogic:
         self.work_thread.workStart.connect(self.WorkStart)
         self.work_thread.start()
 
-        self.work_thread.AppendWork(WT_COMPILE, self.work_thread.ET_Daily, {}, 0)
-
     def closeWindow(self):
         pass
+
+    def init_shelve_data(self):        
+        shelve_data = shelve.open(common_db_path, flag='c', protocol=2, writeback=True)
+        # 初始化db
+        if 'qq' not in shelve_data:
+            shelve_data['qq'] = []
+        if 'branch' not in shelve_data:
+            shelve_data['branch'] = []
+        if 'config' not in shelve_data:
+            shelve_data['config'] = {}
+
+        # 初始化数据
+        self.all_qqs = shelve_data['qq']
+        self.save_config = shelve_data['config']
+        self.all_braches = shelve_data['branch']
+        if 'sel_branch' in shelve_data:
+            self.sel_branch = shelve_data['sel_branch']
+        else:
+            self.sel_branch = ''
+
+        shelve_data.close()
 
     def read_common_config(self):
         configer = ConfigParser()
@@ -164,6 +167,17 @@ class CMainLogic:
         except Exception as err:
             self.appendLog(work_logger, err.__str__())
     
+    def getShelveConfigData(self, key):
+        if key not in self.save_config:
+            return None
+        
+        return self.save_config[key]
+    
+    def setShelveConfigData(self, key, value):
+        print(key, value, self.save_config)
+        self.save_config[key] = value
+        self.saveShelveData('config', self.save_config)    
+
     # 逻辑接口    
     def start_vs(self, path, solution, branch):
         try:
@@ -273,7 +287,7 @@ class CMainLogic:
 
         return False, -1
 
-    def CreateNewProj(self, p4path, proj_path = "", res_path = "", star_svn = "", video_svn = ""):
+    def CreateNewProj(self, p4path, workspace, proj_path = "", res_path = "", star_svn = "", video_svn = ""):
         print(p4path, proj_path, res_path, star_svn, video_svn) 
         if '' == p4path:
             return False
@@ -302,7 +316,7 @@ class CMainLogic:
             video_svn_path = video_svn
 
         self.update_thread.start_update_and_compile(self.update_thread.EOT_Create
-            , p4path, proj_path, svn_path, video_svn_path)
+            , p4path, proj_path, workspace, svn_path, video_svn_path)
         return True
 
     def CBCreateNewProj(self):
@@ -373,8 +387,11 @@ class CMainLogic:
         if None == branch_item:
             return False
         
+        if not hasattr(branch_item, "workspace"):
+            branch_item.workspace = self.ui.CBWorkSpace.currentText()
+        
         self.update_thread.start_update_and_compile(self.update_thread.EOT_Update
-            , branch_item.p4path, branch_item.projpath)
+            , branch_item.p4path, branch_item.projpath, branch_item.workspace)
    
     def start_console_replacer(self, branch):
         branch_item = self._find_branch_by_name(branch)
@@ -412,8 +429,21 @@ class CMainLogic:
         finally:
             return True
 
+    def setTimingCompile(self, is_open):
+        self.setShelveConfigData("timing_compile", True)
+        if is_open:
+            self.work_thread.AppendWork(WT_COMPILE, self.work_thread.ET_Daily, {}, 10800)
+        else:
+            self.work_thread.DeleteWork(WT_COMPILE)
+
+
     def WorkStart(self, type, params):
         print("start work:", type, params)
+        try:
+            if WT_COMPILE == type:
+                self.update_and_compile(self.ui.cbBranches.currentText(), "")
+        except Exception as err:
+            self.logger.LogError("work start", err.__str__())
 
     # 分支换路径
     def _transBranchToPath(self, branch):

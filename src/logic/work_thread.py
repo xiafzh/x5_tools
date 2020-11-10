@@ -84,7 +84,6 @@ class CWorkThread(QThread):
             now_date_time = time.time()
             delta_time = now_date_time - self.local_datetime
             
-            now_remote_date_time = self.remote_datetime + delta_time
             # 每秒处理的事件
 
             self.last_check_datetime_sec = now_date_time
@@ -94,12 +93,15 @@ class CWorkThread(QThread):
 
 
                 # 跨天处理的事件
+                now_remote_date_time = GetNetTimeMS()
                 if not IsSameDay_TS(now_remote_date_time, self.remote_datetime):
                     # 跨天，重置一下每日执行
                     self.ResetDaily()
+                    
+                self.remote_datetime = now_remote_date_time
 
                 # 计算当前距离每天起始时间的间隔
-                daily_interval = 0                    
+                daily_interval = now_remote_date_time % 86400         
                 for key in self.exe_map[self.ET_Daily]:
                     if key not in self.work_map:
                         self.DeleteWork(key)
@@ -116,7 +118,6 @@ class CWorkThread(QThread):
                 self.last_check_datatime_min = now_date_time
             
             self.local_datetime = now_date_time
-            self.remote_datetime = now_remote_date_time
 
 
 # 启动服务器的线程
@@ -124,7 +125,8 @@ class CThreadStartServer(QThread):
     FIRST_PROCESSES = ("app_box", "app_box.exe", "app_box_d", "app_box_d.exe"
         , "admin_proxy", "admin_proxy.exe", "admin_proxy_d", "admin_proxy_d.exe"
         , "admin_client", "admin_client.exe", "admin_client_d", "admin_client_d.exe"
-        , "admin_client_new", "admin_client_new.exe", "admin_client_new_d", "admin_client_new_d.exe")
+        , "admin_client_new", "admin_client_new.exe", "admin_client_new_d", "admin_client_new_d.exe"
+        , "launch_dx_d.exe", "launch_dx_d", "launch_dx.exe", "launch_dx")
     SECOND_PROCESSES = ("service_box", "service_box.exe", "service_box_d", "service_box_d.exe")
 
 

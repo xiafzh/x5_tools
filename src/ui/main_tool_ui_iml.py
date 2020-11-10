@@ -29,6 +29,7 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
         self.init_widget_data()
         self.init_event_bind()
         self.on_click_log_switch()
+        self.init_widget_config()
 
         self.show()
 
@@ -41,7 +42,7 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
         self.cbProjects.setEnabled(False)
         self.btnProjPath.setVisible(False)
         self.btnSrcPath.setVisible(False)
-
+        self.btnTest.setVisible(False)
 
         self.cbIP.setEditable(True)
         #self.checkOnlyAdd.setCheckState(False)
@@ -126,6 +127,7 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
         self.checkAutoCreate.stateChanged.connect(self.on_auto_create_change)
         self.checkOnlyAdd.stateChanged.connect(self.on_auto_create_change)
         self.checkSVN.stateChanged.connect(self.on_auto_create_change)
+        self.cbTimingCompiler.stateChanged.connect(self.on_timing_compile_change)
 
         self.btn_login.clicked.connect(self.on_click_login)
         self.log_combobox.currentTextChanged.connect(self.on_log_change)
@@ -145,6 +147,10 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
         self.btnCancelReadonly.clicked.connect(self.slot_click_cancel_readonly)
 
         self.btnTest.clicked.connect(self.slot_click_test_fun)
+
+    def init_widget_config(self):
+        is_timing_compile = self.lmgr.getShelveConfigData('timing_compile')
+        self.cbTimingCompiler.setChecked(None != is_timing_compile and is_timing_compile)
 
     def slot_click_vs_star_client(self):
         self.lmgr.start_vs("star", "build_client.sln", self.cbBranches.currentText())
@@ -236,6 +242,9 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
                 self.editSVNVideo.setEnabled(self.checkSVN.isChecked())                
            
 
+    def on_timing_compile_change(self):
+        self.lmgr.setTimingCompile(self.cbTimingCompiler.isChecked())
+        
     def slot_click_create_proj(self):
         if self.checkOnlyAdd.isChecked():
             self.on_add_proj()
@@ -252,7 +261,7 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
                 svn_star = ""
                 svn_video = ""
 
-            res = self.lmgr.CreateNewProj(self.editP4Path.text()
+            res = self.lmgr.CreateNewProj(self.editP4Path.text(), self.CBWorkSpace.currentText()
                 , projpath, respath, svn_star, svn_video)
             if not res:
                 self.log_editbox.append("CreateFailed")

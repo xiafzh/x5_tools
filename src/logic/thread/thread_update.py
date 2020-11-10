@@ -4,6 +4,7 @@ import os
 import subprocess
 import copy
 import time
+import psutil
 from PyQt5.QtCore import QThread,pyqtSignal
 import xml.dom.minidom
 from src.logic.tools.read_xml import *
@@ -49,6 +50,9 @@ class CUpdateThreadLogic:
         self.init_topo_data(conf_data, self.EOT_Create);
         conf_data = GetCommonXMLData("./config/common_config.xml", "CommonConfig/UpdateTopos")
         self.init_topo_data(conf_data, self.EOT_Update)
+        
+        self.stop_process = CThreadStopProcess()
+        self.stop_process.finishSin.connect(self.slot_stop_process)
 
     def init_topo_data(self, conf_data, type):
         if conf_data == None:
@@ -65,18 +69,46 @@ class CUpdateThreadLogic:
                 self.topo_data_copy[type][id_str].entry += 1
             self.topo_data_copy[type].update({new_id : new_data})
         
-    def start_update_and_compile(self, type, p4path, projpath, svnpath = "", videosvnpath = ""):
+    def start_update_and_compile(self, type, p4path, projpath, workspace, svnpath = "", videosvnpath = ""):
         if self.is_running:
             return False
         self.is_running = True
+        self.type = type
         self.p4path = p4path
+        self.workspace = workspace
         self.projpath = projpath
         self.svnpath = svnpath
         self.videosvnpath = videosvnpath
 
-        self.topo_data = copy.deepcopy(self.topo_data_copy[type])
-        self.check_update_running()
+        self.p4_login()
+
+        self.stop_process.exit(0)
+        self.stop_process.init(0, self.projpath)
+        self.stop_process.start()
         return True
+
+    def p4_login(self):
+        try:
+            self.lmgr.ThreadSafeChangeDir("./scripts")
+            cpobj = X51Compiler()
+            params = "{0} {1} {2} {3}".format(self.lmgr.p4_username, self.lmgr.p4_password, self.lmgr.p4_host, self.workspace)
+            print(params)
+            cpobj.ExecuteFile("p4_common_login.bat", params, os.getcwd())
+            while True:
+                is_finish = cpobj.Finished()
+                while True:
+                    if "" == cpobj.GetOutputString():
+                        break
+                if is_finish:
+                    break
+        finally:
+            self.lmgr.ThreadSafeChangeDirOver()
+    
+    def slot_stop_process(self, is_finish):
+        print(is_finish)
+        if is_finish:
+            self.topo_data = copy.deepcopy(self.topo_data_copy[self.type])
+            self.check_update_running()
 
     def check_update_running(self):
         try:
@@ -177,3 +209,48 @@ class CThreadCreateProj(QThread):
         self.finishSin.emit(self.id, res)
 
  
+class CThreadStopProcess(QThread):
+    FIRST_PROCESSES = ("app_box", "app_box.exe", "app_box_d", "app_box_d.exe"
+        , "admin_proxy", "admin_proxy.exe", "admin_proxy_d", "admin_proxy_d.exe"
+        , "admin_client", "admin_client.exe", "admin_client_d", "admin_client_d.exe"
+        , "admin_client_new", "admin_client_new.exe", "admin_client_new_d", "admin_client_new_d.exe"
+        , "launch_dx_d.exe", "launch_dx.exe", "launch_dx_d", "launch_dx")
+    SECOND_PROCESSES = ("service_box", "service_box.exe", "service_box_d", "service_box_d.exe")
+
+    finishSin = pyqtSignal(bool)
+
+    def __init__(self):
+        super(CThreadStopProcess, self).__init__()
+
+    def init(self, type, pwd):
+        self.type = type
+        self.pwd = pwd
+
+    def get_stop_process_list(self, path):
+        res = [[], []]
+        psids = psutil.pids()
+        for item in psids:
+            try:
+                pinfo = psutil.Process(item)
+
+                if pinfo.name() in self.FIRST_PROCESSES and pinfo.cwd().replace("\\", "/").lower().startswith(path.lower()):
+                    res[0].append(item)
+                elif pinfo.name() in self.SECOND_PROCESSES and pinfo.cwd().replace("\\", "/").lower().startswith(path.lower()):
+                    res[1].append(item)
+            except Exception as err:
+                print(item, "error:", err.__str__())
+        return res
+
+    def run(self):
+        try:
+            stop_plist = self.get_stop_process_list(self.pwd)
+            print(stop_plist)
+            for plist in stop_plist:
+                for pid in plist:
+                    os.popen("taskkill /F /pid %d" % pid)                        
+
+            self.finishSin.emit(True)
+        except Exception as err:
+            self.finishSin.emit(False)
+            
+

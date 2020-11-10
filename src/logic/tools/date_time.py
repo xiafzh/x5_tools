@@ -34,9 +34,9 @@ def GetNetTimeMS():
         
             time_arr = re.split('[];=]',rep.text.replace("\r\n", ""))
 
-            print("net time")
-            return time.mktime(int(time_arr[3]), int(time_arr[5]), int(time_arr[7])
-                , int(time_arr[9]), int(time_arr[11]), int(time_arr[13]), 0)
+            time_tuple = time.struct_time((int(time_arr[3]), int(time_arr[5]), int(time_arr[7])
+                , int(time_arr[11]), int(time_arr[13]), int(time_arr[9]), 0, 0, 0))
+            return time.mktime(time_tuple)
         else:
             return time.time()
     except Exception as err:
