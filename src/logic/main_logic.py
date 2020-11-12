@@ -43,7 +43,10 @@ class CMainLogic:
         self.init_workspace()
 
         self.start_server_thread = CThreadStartServer(self)
+
         self.update_thread = CUpdateThreadLogic(self)
+        #self.update_thread.msgboxSin.connect(self.ui.slot_show_message_box)
+
         # 常规工作进程-主要处理Update(time)
         self.work_thread = CWorkThread(self)
         self.work_thread.workStart.connect(self.WorkStart)
@@ -117,7 +120,7 @@ class CMainLogic:
         try:
             self.ThreadSafeChangeDir("./scripts")
             cpobj = X51Compiler()
-            cpobj.ExecuteFile("p4_common_clients.bat", self.p4_username, os.getcwd())
+            cpobj.ExecuteFile("p4_common_clients.bat", "{0} {1} {2}".format(self.p4_username, self.p4_password, self.p4_host), os.getcwd())
             workspace_list = []
             while True:
                 is_finish = cpobj.Finished()
@@ -135,15 +138,17 @@ class CMainLogic:
                     
                 if is_finish:
                     break
-            
+            print(workspace_list)
             host_name = socket.gethostname()
-
+            print(host_name)
+            
             self.workspaces = []
             for key in workspace_list:
-                cpobj.ExecuteFile("p4_common_workspace.bat", key, os.getcwd())
+                print("{0} {1}".format(key, os.getcwd()))
+                cpobj.ExecuteFile("p4_common_workspace.bat", '{0} {1} {2} {3}'.format(key, self.p4_username, self.p4_password, self.p4_host), os.getcwd())
                 while True:
                     is_finish = cpobj.Finished()
-                        
+                    
                     while True:
                         out_str = cpobj.GetOutputString()
                         if "" == out_str:
@@ -156,8 +161,11 @@ class CMainLogic:
                         
                     if is_finish:
                         break
+            print(self.workspaces)
+            # end for
         finally:
             self.ThreadSafeChangeDirOver()
+        
 
     def saveShelveData(self, key, value):
         try:
@@ -432,13 +440,13 @@ class CMainLogic:
     def setTimingCompile(self, is_open):
         self.setShelveConfigData("timing_compile", True)
         if is_open:
-            self.work_thread.AppendWork(WT_COMPILE, self.work_thread.ET_Daily, {}, 10800)
+            self.work_thread.AppendWork(WT_COMPILE, CWorkThread.ET_Daily, {}, 10800)
         else:
             self.work_thread.DeleteWork(WT_COMPILE)
 
 
     def WorkStart(self, type, params):
-        print("start work:", type, params)
+        self.logger.LogDebug(work_logger, "start work ", type, " param", params)
         try:
             if WT_COMPILE == type:
                 self.update_and_compile(self.ui.cbBranches.currentText(), "")

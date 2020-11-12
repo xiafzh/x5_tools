@@ -6,6 +6,7 @@ import copy
 import time
 import psutil
 from PyQt5.QtCore import QThread,pyqtSignal
+from PyQt5.QtWidgets import QMessageBox
 import xml.dom.minidom
 from src.logic.tools.read_xml import *
 from x51_tools import X51Compiler
@@ -38,6 +39,7 @@ class CUpdateThreadLogic:
     ECT_SvnCOVideo = 3
     ECT_SvnUpdate = 4
 
+    #msgboxSin = pyqtSignal(int, int, str)
     def __init__(self, mgr):
         self.lmgr = mgr
         self.topo_data_copy = {}
@@ -79,7 +81,9 @@ class CUpdateThreadLogic:
         self.projpath = projpath
         self.svnpath = svnpath
         self.videosvnpath = videosvnpath
-
+        
+        #self.lmgr.ui.slot_show_message_box(QMessageBox.Ok, QMessageBox.Information, "开始编译，请等待...")
+        
         self.p4_login()
 
         self.stop_process.exit(0)
@@ -135,7 +139,7 @@ class CUpdateThreadLogic:
                 print("no ", id)
                 return
             
-            self.update_thread[id].exit(0)
+            self.update_thread[id].wait()
             del self.update_thread[id]
 
             for key in self.topo_data:

@@ -14,7 +14,7 @@ from src.logic.main_data import *
 # 主要工作线程
 class CWorkThread(QThread):
     # 更新时间
-    UPDATE_INTERVAL_MIN = 1
+    UPDATE_INTERVAL_MIN = 60
 
     # 执行类型
     ET_Frame = 0 #每帧
@@ -35,7 +35,7 @@ class CWorkThread(QThread):
 
         print("local_time:", self.local_datetime, ", remote_time:", self.remote_datetime)
         self.last_check_datetime_sec = self.local_datetime
-        self.last_check_datatime_min = self.local_datetime
+        self.last_check_datatime_min = 0
 
         self.work_map = {}
         self.exe_map = {}
@@ -78,6 +78,7 @@ class CWorkThread(QThread):
                 continue
 
             self.work_map[key].has_executed = False
+            print("reset work exe state daily ", key)
 
     def run(self):
         while True:
@@ -101,20 +102,23 @@ class CWorkThread(QThread):
                 self.remote_datetime = now_remote_date_time
 
                 # 计算当前距离每天起始时间的间隔
-                daily_interval = now_remote_date_time % 86400         
+                daily_interval = (now_remote_date_time + 28800) % 86400
+                print("start", len(self.exe_map[self.ET_Daily]), daily_interval)
                 for key in self.exe_map[self.ET_Daily]:
                     if key not in self.work_map:
                         self.DeleteWork(key)
+                        print("not in work map", key)
                         continue
 
                     if (self.work_map[key].has_executed):
                         continue
                     
+                    print("check work", key, ", start:", self.work_map[key].start_interval)
                     if daily_interval >= self.work_map[key].start_interval:
                         self.work_map[key].has_executed = True
                         self.workStart.emit(self.work_map[key].work_type, self.work_map[key].params)
 
-                    print(self.work_map[key])
+                    #print(self.work_map[key])
                 self.last_check_datatime_min = now_date_time
             
             self.local_datetime = now_date_time

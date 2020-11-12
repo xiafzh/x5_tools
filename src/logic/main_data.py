@@ -31,6 +31,7 @@ class STimerInfo:
         # 最好不要超过执行类型对应的间隔
         self.has_executed = True    # 默认为已经执行过
         self.start_interval = 0
+        
 
     def __str__(self):
         return ("{0} {1} {2}".format(self.work_type, self.exe_type, self.has_executed))

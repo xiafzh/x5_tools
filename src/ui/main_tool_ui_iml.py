@@ -328,6 +328,9 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
     def slot_click_cancel_readonly(self):
         self.lmgr.cancel_readonly(self.cbBranches.currentText())
 
+    def slot_show_message_box(self, type, icon, msg):
+        CMyMessageBox.information(self, "提示信息", msg, type, CMyMessageBox.Yes)
+
     def define_qq_btn(self):
         print("未完成")
 
