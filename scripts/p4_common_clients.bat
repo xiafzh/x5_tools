@@ -2,4 +2,4 @@
 SET P4USER=%1
 SET P4PASSWD=%2
 SET P4PORT=%3
-p4 clients -u %P4USER%
+p4 -u %P4USER% -p %P4PORT% -P %P4PASSWD% clients -u %P4USER% 

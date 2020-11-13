@@ -83,31 +83,12 @@ class CUpdateThreadLogic:
         self.videosvnpath = videosvnpath
         
         #self.lmgr.ui.slot_show_message_box(QMessageBox.Ok, QMessageBox.Information, "开始编译，请等待...")
-        
-        self.p4_login()
 
         self.stop_process.exit(0)
         self.stop_process.init(0, self.projpath)
         self.stop_process.start()
         return True
 
-    def p4_login(self):
-        try:
-            self.lmgr.ThreadSafeChangeDir("./scripts")
-            cpobj = X51Compiler()
-            params = "{0} {1} {2} {3}".format(self.lmgr.p4_username, self.lmgr.p4_password, self.lmgr.p4_host, self.workspace)
-            print(params)
-            cpobj.ExecuteFile("p4_common_login.bat", params, os.getcwd())
-            while True:
-                is_finish = cpobj.Finished()
-                while True:
-                    if "" == cpobj.GetOutputString():
-                        break
-                if is_finish:
-                    break
-        finally:
-            self.lmgr.ThreadSafeChangeDirOver()
-    
     def slot_stop_process(self, is_finish):
         print(is_finish)
         if is_finish:
@@ -165,7 +146,7 @@ class CUpdateThreadLogic:
     def __GetExecuteCMD(self, type, cmd):
         type_value = int(type)
         if type_value == self.ECT_P4Snc:
-            return self.p4path
+            return '{0} {1} {2} {3} {4}'.format(self.p4path, self.lmgr.p4_username, self.lmgr.p4_password, self.lmgr.p4_host, self.workspace)
         elif type_value == self.ECT_SvnCOStar:
             return "%s %s %s %s" % (self.projpath, self.lmgr.svn_username, self.lmgr.svn_password, self.svnpath)
         elif type_value == self.ECT_SvnCOVideo:

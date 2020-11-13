@@ -120,6 +120,7 @@ class CMainLogic:
         try:
             self.ThreadSafeChangeDir("./scripts")
             cpobj = X51Compiler()
+            print(self.p4_username, self.p4_password, self.p4_host)
             cpobj.ExecuteFile("p4_common_clients.bat", "{0} {1} {2}".format(self.p4_username, self.p4_password, self.p4_host), os.getcwd())
             workspace_list = []
             while True:
@@ -133,7 +134,7 @@ class CMainLogic:
                     data_arr = out_str.split(" ")
                     if len(data_arr) < 2 or data_arr[0] != "Client":
                         continue
-                
+                    
                     workspace_list.append(data_arr[1])
                     
                 if is_finish:
