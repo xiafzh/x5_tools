@@ -89,7 +89,7 @@ class CWorkThread(QThread):
 
             self.last_check_datetime_sec = now_date_time
 
-            if now_date_time - self.last_check_datatime_min >= self.UPDATE_INTERVAL_MIN:
+            if abs(now_date_time - self.last_check_datatime_min) >= self.UPDATE_INTERVAL_MIN:
                 # 每分钟处理的事件
 
 

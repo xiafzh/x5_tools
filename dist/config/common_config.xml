@@ -58,4 +58,8 @@
             <NextItem id="3" />
         </TopoItem>
     </UpdateTopos>
+    <CompileTopos>
+        <TopoItem id="1" type="2" cmd="common_ib_all.bat" desc="Compile all">
+        </TopoItem>
+    </CompileTopos>
 </CommonConfig>

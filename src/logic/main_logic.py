@@ -22,6 +22,7 @@ from src.logic.tools.date_time import *
 class CMainLogic:
     def __init__(self, ui):
         self.ui = ui
+        self.main_path = os.getcwd()
         self.work_logs = { work_logger : [],} 
 
         self.mutex = QtCore.QMutex()
@@ -252,7 +253,7 @@ class CMainLogic:
         return self.all_braches
 
     def getAllProjects(self):
-        return ('更新编译', '仅编译', '仅编译客户端', '仅编译服务器')
+        return ('更新编译', '仅编译')
 
     def getAllLoginQQ(self):
         return self.all_qqs
@@ -270,6 +271,7 @@ class CMainLogic:
                 if item.title == title:
                     item.p4path = p4path
                     item.projpath = projpath
+                    item.workspace = workspace
                     self.saveShelveData('branch', self.all_braches)
                     return False, ""
 
@@ -332,14 +334,14 @@ class CMainLogic:
         print("over")
     
     def ThreadSafeChangeDir(self, pwd):
-        self.dir_mutex.lock()
+        #self.dir_mutex.lock()
         #print("ThreadSafeChangeDir mutex lock")
         self.old_path = os.getcwd()
         os.chdir(pwd)
     
     def ThreadSafeChangeDirOver(self):
         os.chdir(self.old_path)
-        self.dir_mutex.unlock()
+        #self.dir_mutex.unlock()
         #print("ThreadSafeChangeDirOver mutex unlock")
 
     def appendLog(self, log_id, log_content):
@@ -399,28 +401,25 @@ class CMainLogic:
         if not hasattr(branch_item, "workspace"):
             branch_item.workspace = self.ui.CBWorkSpace.currentText()
         
-        self.update_thread.start_update_and_compile(self.update_thread.EOT_Update
+        compile_type = self.update_thread.EOT_Update
+        if proj == "仅编译":
+            compile_type = self.update_thread.EOT_Compile
+
+        self.update_thread.start_update_and_compile(compile_type
             , branch_item.p4path, branch_item.projpath, branch_item.workspace)
    
     def start_console_replacer(self, branch):
         branch_item = self._find_branch_by_name(branch)
-        cmd = "start %s/exe/debug_bin/ConsoleReplacer.exe" % branch_item.projpath
-        subprocess.Popen(cmd, shell=True, stdout = subprocess.PIPE
-            , stdin=subprocess.PIPE, stderr=subprocess.PIPE, encoding="gb18030")
-
+        self._ExecuteCMD("%s/exe/debug_bin/" % branch_item.projpath, "start ConsoleReplacer.exe")
 
     def start_ui_editor(self, branch):
         branch_item = self._find_branch_by_name(branch)
-        self.ThreadSafeChangeDir("%s/exe/NewUIEditor/editor/" % branch_item.projpath)
-        try:
-            os.system(r"attrib -r ..\resources\editor\domain\layout\Layout_Config.local.xml")
-            cmd = "start /b editor.exe Layout"
-            subprocess.Popen(cmd, shell=True, stdout = subprocess.PIPE
-                , stdin=subprocess.PIPE, stderr=subprocess.PIPE, encoding="gb18030")
-        except Exception as e:
-            print(e)
-        finally:
-            self.ThreadSafeChangeDirOver()
+        
+        os.system(r"attrib -r %s/exe/NewUIEditor/resources/editor/domain/layout/Layout_Config.local.xml" % branch_item.projpath)
+        
+        cmd = "start /b editor.exe Layout"
+        self._ExecuteCMD("%s/exe/NewUIEditor/editor" % branch_item.projpath, cmd)
+        
 
     def cancel_readonly(self, branch):
         branch_item = self._find_branch_by_name(branch)
@@ -450,7 +449,7 @@ class CMainLogic:
         self.logger.LogDebug(work_logger, "start work ", type, " param", params)
         try:
             if WT_COMPILE == type:
-                self.update_and_compile(self.ui.cbBranches.currentText(), "")
+                self.update_and_compile(self.ui.cbBranches.currentText(), self.ui.cbProjects.currentText())
         except Exception as err:
             self.logger.LogError("work start", err.__str__())
 
@@ -541,7 +540,18 @@ class CMainLogic:
 
         return svn_path, video_svn_path
  
-
+    def _ExecuteCMD(self, path, cmd):
+        exe_cmder = X51Compiler()
+        exe_cmder.ExecuteCommand(cmd, path)
+        while True:
+            is_finish = exe_cmder.Finished()
+            while True:
+                out_str = exe_cmder.GetOutputString()
+                if "" == out_str:
+                    break
+            if is_finish:
+                break
+        return True
 
     # 一些测试代码
     def test_thread(self):

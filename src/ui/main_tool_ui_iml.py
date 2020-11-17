@@ -39,7 +39,7 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
 
     def init_widget_data(self):
         # 屏蔽掉不可用功能按钮
-        self.cbProjects.setEnabled(False)
+        #self.cbProjects.setEnabled(False)
         self.btnProjPath.setVisible(False)
         self.btnSrcPath.setVisible(False)
         self.btnTest.setVisible(False)

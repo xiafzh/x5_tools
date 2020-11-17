@@ -32,6 +32,7 @@ class STopoData:
 class CUpdateThreadLogic:
     EOT_Create = 0
     EOT_Update = 1
+    EOT_Compile = 2
 
     ECT_P4Snc = 0
     ECT_SvnCOStar = 1
@@ -52,6 +53,10 @@ class CUpdateThreadLogic:
         self.init_topo_data(conf_data, self.EOT_Create);
         conf_data = GetCommonXMLData("./config/common_config.xml", "CommonConfig/UpdateTopos")
         self.init_topo_data(conf_data, self.EOT_Update)
+        conf_data = GetCommonXMLData("./config/common_config.xml", "CommonConfig/CompileTopos")
+        print(conf_data)
+        self.init_topo_data(conf_data, self.EOT_Compile)
+        print(self.topo_data_copy[self.EOT_Compile])
         
         self.stop_process = CThreadStopProcess()
         self.stop_process.finishSin.connect(self.slot_stop_process)
@@ -103,7 +108,7 @@ class CUpdateThreadLogic:
                     exe_cmd = self.__GetExecuteCMD(topo.type, topo.cmd)
 
                     topo.state = STopoData.S_RUNNING
-                    self.lmgr.ThreadSafeChangeDir(os.getcwd() + "/scripts")
+                    self.lmgr.ThreadSafeChangeDir(self.lmgr.main_path + "/scripts")
                     self.update_thread[topo.id] = CThreadCreateProj(topo.id, topo.desc, topo.cmd, exe_cmd)
                     self.lmgr.ThreadSafeChangeDirOver()
                     
