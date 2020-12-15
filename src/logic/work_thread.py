@@ -98,12 +98,12 @@ class CWorkThread(QThread):
                 if not IsSameDay_TS(now_remote_date_time, self.remote_datetime):
                     # 跨天，重置一下每日执行
                     self.ResetDaily()
+                    print("start", len(self.exe_map[self.ET_Daily]), daily_interval)
                     
                 self.remote_datetime = now_remote_date_time
 
                 # 计算当前距离每天起始时间的间隔
                 daily_interval = (now_remote_date_time + 28800) % 86400
-                print("start", len(self.exe_map[self.ET_Daily]), daily_interval)
                 for key in self.exe_map[self.ET_Daily]:
                     if key not in self.work_map:
                         self.DeleteWork(key)
@@ -129,8 +129,7 @@ class CThreadStartServer(QThread):
     FIRST_PROCESSES = ("app_box", "app_box.exe", "app_box_d", "app_box_d.exe"
         , "admin_proxy", "admin_proxy.exe", "admin_proxy_d", "admin_proxy_d.exe"
         , "admin_client", "admin_client.exe", "admin_client_d", "admin_client_d.exe"
-        , "admin_client_new", "admin_client_new.exe", "admin_client_new_d", "admin_client_new_d.exe"
-        , "launch_dx_d.exe", "launch_dx_d", "launch_dx.exe", "launch_dx")
+        , "admin_client_new", "admin_client_new.exe", "admin_client_new_d", "admin_client_new_d.exe")
     SECOND_PROCESSES = ("service_box", "service_box.exe", "service_box_d", "service_box_d.exe")
 
 
@@ -203,7 +202,7 @@ class CThreadStartServer(QThread):
             #print(stop_plist)
             for plist in stop_plist:
                 for pid in plist:
-                    os.popen("taskkill /F /pid %d" % pid)
+                    subprocess.call("taskkill /F /pid %d" % pid, creationflags=0x00000008)
                         
             
             self.data_mgr.ThreadSafeChangeDir(self.pwd)

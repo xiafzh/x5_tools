@@ -60,6 +60,7 @@ class CUpdateThreadLogic:
         
         self.stop_process = CThreadStopProcess()
         self.stop_process.finishSin.connect(self.slot_stop_process)
+        self.stop_process.logSin.connect(self.slot_stop_log)
 
     def init_topo_data(self, conf_data, type):
         if conf_data == None:
@@ -78,7 +79,10 @@ class CUpdateThreadLogic:
         
     def start_update_and_compile(self, type, p4path, projpath, workspace, svnpath = "", videosvnpath = ""):
         if self.is_running:
+            self.lmgr.appendLog(work_logger, "compiler is running")
             return False
+
+        self.lmgr.appendLog(work_logger, "compiler start running")
         self.is_running = True
         self.type = type
         self.p4path = p4path
@@ -99,6 +103,9 @@ class CUpdateThreadLogic:
         if is_finish:
             self.topo_data = copy.deepcopy(self.topo_data_copy[self.type])
             self.check_update_running()
+
+    def slot_stop_log(self, log_info):
+        self.lmgr.appendLog(work_logger, log_info)
 
     def check_update_running(self):
         try:
@@ -208,6 +215,7 @@ class CThreadStopProcess(QThread):
     SECOND_PROCESSES = ("service_box", "service_box.exe", "service_box_d", "service_box_d.exe")
 
     finishSin = pyqtSignal(bool)
+    logSin = pyqtSignal(str)
 
     def __init__(self):
         super(CThreadStopProcess, self).__init__()
@@ -235,9 +243,11 @@ class CThreadStopProcess(QThread):
         try:
             stop_plist = self.get_stop_process_list(self.pwd)
             print(stop_plist)
+            self.logSin.emit("stop process " + stop_plist.__str__())
             for plist in stop_plist:
                 for pid in plist:
-                    os.popen("taskkill /F /pid %d" % pid)                        
+                    subprocess.call("taskkill /F /pid %d" % pid, creationflags=0x00000008)
+                    self.logSin.emit("execute taskkill /F /pid %d" % pid)
 
             self.finishSin.emit(True)
         except Exception as err:
