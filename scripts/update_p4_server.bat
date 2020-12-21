@@ -4,5 +4,5 @@ SET P4USER=%2
 SET P4PASSWD=%3
 SET P4PORT=%4
 SET P4CLIENT=%5
-p4 sync %INPUT_P4_PATH%/exe/server/...#head
+p4 -u %P4USER% -p %P4PORT% -P %P4PASSWD% -c %P4CLIENT% sync %INPUT_P4_PATH%/exe/server/...#head
 	
