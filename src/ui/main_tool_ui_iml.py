@@ -42,7 +42,7 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
         #self.cbProjects.setEnabled(False)
         self.btnProjPath.setVisible(False)
         self.btnSrcPath.setVisible(False)
-        self.btnTest.setVisible(False)
+        #self.btnTest.setVisible(False)
 
         self.cbIP.setEditable(True)
         #self.checkOnlyAdd.setCheckState(False)
@@ -336,6 +336,6 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
 
     def slot_click_test_fun(self):
         self.lmgr.test_fun()
-        message_box = CMyMessageBox.information(self, "标题"
-            , "对话框这姑娘问", CMyMessageBox.Yes | CMyMessageBox.No, CMyMessageBox.Yes)
+        #message_box = CMyMessageBox.information(self, "标题"
+        #    , "对话框这姑娘问", CMyMessageBox.Yes | CMyMessageBox.No, CMyMessageBox.Yes)
         #print(dir(QMessageBox))

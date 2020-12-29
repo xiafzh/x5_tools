@@ -77,6 +77,10 @@ class CMainLogic:
 
         shelve_data.close()
 
+
+        for item in self.all_braches:
+            print(item)
+
     def read_common_config(self):
         configer = ConfigParser()
         configer.read(common_config_path)
@@ -170,6 +174,10 @@ class CMainLogic:
         
 
     def saveShelveData(self, key, value):
+        if ("branch" == key):
+            for item in value:
+                print(item)
+
         try:
             shelve_data = shelve.open(common_db_path, flag='c', protocol=2, writeback=True)
             shelve_data[key] = value
@@ -399,7 +407,8 @@ class CMainLogic:
             return False
         
         if not hasattr(branch_item, "workspace"):
-            branch_item.workspace = self.ui.CBWorkSpace.currentText()
+            setattr(branch_item, "workspace", self.ui.CBWorkSpace.currentText())
+            self.appendLog(work_logger, "{0} {1}".format("append workspace", branch_item.workspace))
         
         compile_type = self.update_thread.EOT_Update
         if proj == "仅编译":
@@ -560,7 +569,7 @@ class CMainLogic:
         self.logger.LogError("compile", "ssss", "dddd")
         
     def test_fun(self):
-        print(GetNetTime())
+        self.WorkStart(WT_COMPILE, {})
 
 
     def testSlotStr(self, s, l):

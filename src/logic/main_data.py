@@ -6,8 +6,9 @@ class SBranchItem:
         self.projpath = proj_path
         self.p4path = p4_path
         self.workspace = workspace
+
     def __str__(self):
-        return "{0} {1} {2}".format(self.title, self.projpath, self.p4path)
+        return "{0} {1} {2} {3}".format(self.title, self.projpath, self.p4path, self.workspace)
 
 class SProjectItem:
     def __init__(self, title):

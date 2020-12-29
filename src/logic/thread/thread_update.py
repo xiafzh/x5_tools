@@ -148,7 +148,8 @@ class CUpdateThreadLogic:
             if len(self.update_thread) == 0:
                 self.is_running = False
                 print(self.is_running)
-                self.lmgr.UpdateProjPath(self.p4path, self.projpath)
+                if (self.EOT_Create == self.type):
+                    self.lmgr.UpdateProjPath(self.p4path, self.workspace, self.projpath)
         except Exception as err:
             self.lmgr.appendLog(work_logger, "on_create_thread_finish %s" % err.__str__())
     
