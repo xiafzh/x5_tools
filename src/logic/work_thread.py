@@ -82,6 +82,13 @@ class CWorkThread(QThread):
 
     def run(self):
         while True:
+            if len(self.delete_work) > 0:
+                for item in self.delete_work:
+                    if item in self.work_map:
+                        self.exe_map[self.work_map[item].exe_type].remove(item)
+                        del self.work_map[item]
+                self.delete_work.clear()
+
             now_date_time = time.time()
             delta_time = now_date_time - self.local_datetime
             
@@ -122,7 +129,6 @@ class CWorkThread(QThread):
                 self.last_check_datatime_min = now_date_time
             
             self.local_datetime = now_date_time
-
 
 # 启动服务器的线程
 class CThreadStartServer(QThread):

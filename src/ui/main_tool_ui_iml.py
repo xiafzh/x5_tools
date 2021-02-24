@@ -42,7 +42,7 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
         #self.cbProjects.setEnabled(False)
         self.btnProjPath.setVisible(False)
         self.btnSrcPath.setVisible(False)
-        #self.btnTest.setVisible(False)
+        self.btnTest.setVisible(False)
 
         self.cbIP.setEditable(True)
         #self.checkOnlyAdd.setCheckState(False)
@@ -65,6 +65,9 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
                 self.cbIP.addItem(ip)
 
         self.CBWorkSpace.addItems(self.lmgr.workspaces)
+
+        self.cbDumpType.addItem("server")
+        self.cbDumpType.addItem("debug_bin")
                 
     # 初始化QQ按钮
     def init_qq_btns(self):
@@ -147,6 +150,10 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
         self.btnCancelReadonly.clicked.connect(self.slot_click_cancel_readonly)
 
         self.btnTest.clicked.connect(self.slot_click_test_fun)
+
+        self.btnDumpRefresh.clicked.connect(self.slot_click_dump_refresh)
+        self.btnDumpClear.clicked.connect(self.slot_click_dump_clear)
+        self.btnDumpCheck.clicked.connect(self.slot_click_dump_check)
 
     def init_widget_config(self):
         is_timing_compile = self.lmgr.getShelveConfigData('timing_compile')
@@ -333,6 +340,22 @@ class Ui_MainWindowImpl(QMainWindow, Ui_MainWindow):
 
     def define_qq_btn(self):
         print("未完成")
+
+    def slot_click_dump_refresh(self):
+        dump_files = self.lmgr.load_dump_files(self.cbBranches.currentText(), self.cbDumpType.currentText())
+        self.cbDumpFile.clear()
+        for item in dump_files:
+            self.cbDumpFile.addItem(item)
+    
+    def slot_click_dump_clear(self):
+        if self.cbDumpFile.currentText().endswith(".dmp") and \
+            self.lmgr.clear_dump_file(self.cbBranches.currentText(), self.cbDumpType.currentText()):
+                self.cbDumpFile.clear()
+    
+    def slot_click_dump_check(self):
+        if self.cbDumpFile.currentText().endswith(".dmp"):
+            self.lmgr.check_dump_file(self.cbBranches.currentText(), self.cbDumpType.currentText()
+                , self.cbDumpFile.currentText())
 
     def slot_click_test_fun(self):
         self.lmgr.test_fun()

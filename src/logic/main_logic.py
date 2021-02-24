@@ -562,6 +562,40 @@ class CMainLogic:
                 break
         return True
 
+    def load_dump_files(self, branch, path):
+        branch_data = self._find_branch_by_name(branch)
+        dump_dir = branch_data.projpath + "/exe/" + path 
+        dump_files = []
+        for dump_file in os.listdir(dump_dir):
+            (_, file_ext) = os.path.splitext(dump_file)
+            if file_ext == ".dmp":
+                dump_files.append(dump_file)
+        return dump_files
+
+    def clear_dump_file(self, branch, path):
+        branch_data = self._find_branch_by_name(branch)
+        dump_dir = branch_data.projpath + "/exe/" + path 
+        for dump_file in os.listdir(dump_dir):
+            (_, file_ext) = os.path.splitext(dump_file)
+            if file_ext == ".dmp":
+                os.remove(dump_dir + "/" + dump_file)
+        return True
+    
+    def check_dump_file(self, branch, path, file_name):
+        branch_data = self._find_branch_by_name(branch)
+        dump_dir = branch_data.projpath + "/exe/" + path
+        dump_file = dump_dir + "/" + file_name
+        try:
+            cur_path = os.getcwd()
+            os.chdir(dump_dir)
+            subprocess.Popen("start %s" % dump_file, shell=True, stdout = subprocess.PIPE
+                , stdin=subprocess.PIPE, stderr=subprocess.PIPE, encoding="gb18030")
+            os.chdir(cur_path)
+            self.logger.LogDebug(work_logger, "start dump file ", path, solution)
+        except Exception as err:
+            self.logger.LogError(work_logger, "start dump error:", err.__str__())
+
+
     # 一些测试代码
     def test_thread(self):
         self.logger.LogDebug("compile", "ssss", "dddd")
